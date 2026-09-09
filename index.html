@@ -219,6 +219,13 @@
                                     <option value="Tunai / Cash">Tunai / Cash</option>
                                 </select>
                             </div>
+                            
+                            <!-- Menambahkan Kolom Referensi Invoice Manual -->
+                            <div class="md:col-span-2 pt-3 mt-1 border-t border-yellow-200">
+                                <label class="block text-xs font-semibold text-gray-700 mb-1 text-yellow-900">No. Referensi Invoice (Opsional, Khusus Pelunasan)</label>
+                                <input type="text" id="inpCustomInv" oninput="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-yellow-300 focus:border-brand-black outline-none bg-yellow-50" placeholder="Contoh: INV-1200/OFO/0926">
+                                <p class="text-[9px] text-gray-600 mt-1 italic">Ketik Nomor Invoice lama di sini saat mencetak kwitansi pelunasan, agar kwitansi terhubung ke tagihan tersebut.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -395,7 +402,8 @@
                             </div>
                             <div class="text-right">
                                 <h2 class="text-3xl font-black text-brand-black tracking-widest uppercase mb-1">KWITANSI</h2>
-                                <p class="text-gray-600 text-sm font-semibold">No. <span id="kwiNumber">...</span></p>
+                                <p class="text-gray-800 text-sm font-bold mb-0.5">No. Kwitansi : <span id="kwiNumber" class="text-brand-black">...</span></p>
+                                <p class="text-gray-500 text-xs font-semibold">Ref. Invoice : <span id="kwiRef" class="text-brand-black">...</span></p>
                             </div>
                         </div>
 
@@ -548,7 +556,9 @@
         };
 
         let activeInvoiceBase = 1200;
+        let activeKwiBase = parseInt(localStorage.getItem('ofo_kwi_base')) || 5000;
         let activeInvoiceNum = ""; 
+        let activeKwiNum = "";
         let currentTab = 'invoice';
         let extraCounter = 0;
         let pendingAuthAction = null; // Menyimpan aksi yang tertunda karena login
@@ -682,12 +692,13 @@
         }
 
         // --- UTILITIES ---
-        function generateInvoiceString(baseNum, dateStr) {
+        function generateDocString(prefix, baseNum, dateStr) {
             const d = new Date(dateStr);
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const yy = String(d.getFullYear()).slice(-2);
-            return `INV-${baseNum}/OFO/${mm}${yy}`;
+            return `${prefix}-${baseNum}/OFO/${mm}${yy}`;
         }
+
         function formatRp(angka) { return new Intl.NumberFormat('id-ID').format(angka || 0); }
         
         function formatDate(dateStr) {
@@ -780,6 +791,7 @@
             const payment = parseInt(document.getElementById('inpPayment').value) || 0;
             const status = document.getElementById('inpStatus').value;
             const method = document.getElementById('inpMethod').value;
+            const customInv = document.getElementById('inpCustomInv').value.trim();
             
             const kostDurSelect = document.getElementById('inpKostDuration');
             const kostDurText = kostDurSelect.options[kostDurSelect.selectedIndex].text;
@@ -827,7 +839,10 @@
             const balance = grandTotal - payment;
 
             const dateStr = checkIn || new Date().toISOString().split('T')[0];
-            activeInvoiceNum = generateInvoiceString(activeInvoiceBase, dateStr);
+            activeInvoiceNum = generateDocString('INV', activeInvoiceBase, dateStr);
+            activeKwiNum = generateDocString('KWI', activeKwiBase, dateStr);
+
+            const displayRefInv = customInv !== "" ? customInv : activeInvoiceNum;
 
             document.getElementById('outInvNumber').textContent = activeInvoiceNum;
             document.getElementById('outDate').textContent = formatDate(new Date().toISOString().split('T')[0]);
@@ -872,13 +887,15 @@
             document.getElementById('outPaid').textContent = `Rp ${formatRp(payment)}`;
             document.getElementById('outBalance').textContent = `Rp ${formatRp(balance < 0 ? 0 : balance)}`;
 
-            document.getElementById('kwiNumber').textContent = activeInvoiceNum;
+            // Logika Nomor Kwitansi & Referensi
+            document.getElementById('kwiNumber').textContent = activeKwiNum;
+            document.getElementById('kwiRef').textContent = displayRefInv;
             document.getElementById('kwiName').textContent = name;
             document.getElementById('kwiTotal').textContent = formatRp(payment);
             document.getElementById('kwiDate').textContent = formatDate(new Date().toISOString().split('T')[0]);
             document.getElementById('kwiMethod').textContent = method;
             
-            let desc = `Pembayaran ${status === 'DP' ? 'DP' : 'Pelunasan'} Sewa ${service} (${room}) untuk ${qtyRoom} kamar selama ${durationText}.`;
+            let desc = `Pembayaran ${status === 'DP' ? 'DP' : 'Pelunasan'} Sewa ${service} (${room}) untuk ${qtyRoom} kamar selama ${durationText}. (Ref: ${displayRefInv})`;
             if (extraTotal > 0) desc += ` Termasuk biaya layanan tambahan.`;
             document.getElementById('kwiDesc').textContent = desc;
             
@@ -1102,6 +1119,8 @@
                             "success"
                         );
                         activeInvoiceBase++; 
+                        activeKwiBase++;
+                        localStorage.setItem('ofo_kwi_base', activeKwiBase);
                         updatePreview();
                     } else {
                         throw new Error(result.message || 'Gagal menyimpan data ke Spreadsheet.');
@@ -1121,7 +1140,12 @@
             const element = document.getElementById('document-preview-container');
             const prefix = currentTab === 'invoice' ? 'INV' : 'KWI';
             const guest = document.getElementById('inpName').value.replace(/\s+/g, '_') || 'Tamu';
-            const filename = `${prefix}_OFO_${activeInvoiceNum}_${guest}.pdf`;
+            
+            let docNumber = currentTab === 'invoice' ? activeInvoiceNum : activeKwiNum;
+            
+            // Format penamaan file PDF agar rapi tanpa karakter '/' yang bisa merusak nama file sistem
+            const safeDocNumber = docNumber.replace(/\//g, '-');
+            const filename = `${prefix}_OFO_${safeDocNumber}_${guest}.pdf`;
             
             const opt = {
                 margin:       0,
@@ -1132,7 +1156,14 @@
             };
 
             // Loading state on button is optional, generating immediately
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Auto-increment Kwitansi jika didownload agar kwitansi selanjutnya punya nomor baru
+                if (currentTab === 'kwitansi') {
+                    activeKwiBase++;
+                    localStorage.setItem('ofo_kwi_base', activeKwiBase);
+                    updatePreview();
+                }
+            });
         }
 
         function initDates() {
