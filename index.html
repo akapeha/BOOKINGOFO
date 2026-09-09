@@ -71,6 +71,9 @@
             </div>
             <div class="flex items-center gap-2 md:gap-4 text-sm">
                 <span class="hidden md:inline text-gray-300"><i class="fa-solid fa-user-circle mr-1 text-brand-yellow"></i> Staff Area</span>
+                <button onclick="checkAuthAndOpenSettings()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
+                    <i class="fa-solid fa-gear mr-1"></i> Harga
+                </button>
                 <button onclick="resetForm()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
                     <i class="fa-solid fa-rotate-right mr-1"></i> Reset
                 </button>
@@ -121,7 +124,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1">Tipe Kamar *</label>
-                                <select id="inpRoom" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                <select id="inpRoom" onchange="handleRoomChange()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
                                     <!-- Diisi oleh JS -->
                                 </select>
                             </div>
@@ -485,6 +488,37 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-60 z-[55] hidden flex flex-col items-center justify-center backdrop-blur-sm px-4 py-6">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl relative flex flex-col max-h-full">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-xl shrink-0">
+                <h3 class="text-lg font-black text-brand-black"><i class="fa-solid fa-gear text-brand-yellow mr-2"></i> Pengaturan Harga Default</h3>
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="text-sm font-bold uppercase text-gray-600 tracking-wider mb-4 border-b pb-2">Tarif Kamar Dasar</h4>
+                    <div id="settingsRoomRates" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 class="text-sm font-bold uppercase text-blue-800 tracking-wider mb-4 border-b border-blue-200 pb-2">Tarif Extra Service</h4>
+                    <div id="settingsExtraRates" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-gray-50 rounded-b-xl shrink-0 flex justify-end gap-3">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 border border-gray-300 text-gray-700 font-bold rounded hover:bg-gray-100 text-sm transition">Batal</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-brand-black text-brand-yellow font-bold rounded hover:bg-gray-800 text-sm shadow transition"><i class="fa-solid fa-save mr-2"></i> Simpan Pengaturan</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Data Master
         const roomData = {
@@ -493,7 +527,16 @@
             Kost: ['Kost Sharing', 'Kost Private']
         };
 
-        const extraServiceConfig = {
+        let defaultRoomRates = {
+            'Twin Room': 150000,
+            'Superior room': 250000,
+            'Longstay Productive': 2000000,
+            'Longstay Smart twin': 2500000,
+            'Kost Sharing': 500000,
+            'Kost Private': 800000
+        };
+
+        let extraServiceConfig = {
             'Early check in': { rate: 20000, label: 'Jam' },
             'Late Check out': { rate: 20000, label: 'Jam' },
             'Extra Bed': { rate: 100000, label: 'Malam' },
@@ -508,6 +551,7 @@
         let activeInvoiceNum = ""; 
         let currentTab = 'invoice';
         let extraCounter = 0;
+        let pendingAuthAction = null; // Menyimpan aksi yang tertunda karena login
 
         // --- AUTH & NOTIF UTILITIES ---
         const AUTH_USER = 'OFOMIN';
@@ -527,7 +571,8 @@
             modal.classList.remove('hidden');
         }
 
-        function showLoginModal() {
+        function showLoginModal(action = null) {
+            pendingAuthAction = action;
             document.getElementById('loginModal').classList.remove('hidden');
             document.getElementById('authErrorMsg').classList.add('hidden');
             document.getElementById('authPassword').value = '';
@@ -536,6 +581,7 @@
 
         function hideLoginModal() {
             document.getElementById('loginModal').classList.add('hidden');
+            pendingAuthAction = null;
         }
 
         function attemptLogin() {
@@ -545,10 +591,94 @@
             if (u === AUTH_USER && p === AUTH_PASS) {
                 sessionStorage.setItem('ofo_auth_verified', 'true');
                 hideLoginModal();
-                switchTab('kwitansi');
+                
+                // Eksekusi aksi yang tertunda
+                if (pendingAuthAction === 'kwitansi') switchTab('kwitansi');
+                else if (pendingAuthAction === 'settings') openSettingsModal();
+                
+                pendingAuthAction = null;
             } else {
                 document.getElementById('authErrorMsg').classList.remove('hidden');
             }
+        }
+
+        // --- SETTINGS UTILITIES ---
+        function loadConfig() {
+            // Mengambil konfigurasi harga yang tersimpan di browser (jika ada)
+            const savedRooms = localStorage.getItem('ofo_room_rates');
+            if (savedRooms) defaultRoomRates = JSON.parse(savedRooms);
+            
+            const savedExtras = localStorage.getItem('ofo_extra_rates');
+            if (savedExtras) extraServiceConfig = JSON.parse(savedExtras);
+        }
+
+        function checkAuthAndOpenSettings() {
+            if (sessionStorage.getItem('ofo_auth_verified') === 'true') {
+                openSettingsModal();
+            } else {
+                showLoginModal('settings');
+            }
+        }
+
+        function openSettingsModal() {
+            // Mengisi Input Harga Kamar
+            const roomContainer = document.getElementById('settingsRoomRates');
+            roomContainer.innerHTML = '';
+            for (let room in defaultRoomRates) {
+                roomContainer.innerHTML += `
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1 uppercase">${room}</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-sm text-gray-500 font-bold">Rp</span>
+                            <input type="number" id="set_room_${room.replace(/\s+/g, '_')}" value="${defaultRoomRates[room]}" class="w-full pl-9 pr-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-brand-black">
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Mengisi Input Harga Extra Service (Kecuali "Lainnya" karena itu input custom)
+            const extraContainer = document.getElementById('settingsExtraRates');
+            extraContainer.innerHTML = '';
+            for (let extra in extraServiceConfig) {
+                if(extra === 'Lainnya') continue;
+                extraContainer.innerHTML += `
+                    <div>
+                        <label class="block text-[11px] font-bold text-blue-800 mb-1 uppercase">${extra} <span class="text-gray-500 lowercase font-normal">(/${extraServiceConfig[extra].label})</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-sm text-gray-500 font-bold">Rp</span>
+                            <input type="number" id="set_extra_${extra.replace(/\s+/g, '_')}" value="${extraServiceConfig[extra].rate}" class="w-full pl-9 pr-3 py-2 text-sm rounded border border-blue-200 focus:border-brand-black outline-none font-bold text-brand-black">
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            // Simpan perubahan harga kamar
+            for (let room in defaultRoomRates) {
+                const val = document.getElementById(`set_room_${room.replace(/\s+/g, '_')}`).value;
+                defaultRoomRates[room] = parseInt(val) || 0;
+            }
+            
+            // Simpan perubahan harga Extra Service
+            for (let extra in extraServiceConfig) {
+                if(extra === 'Lainnya') continue;
+                const val = document.getElementById(`set_extra_${extra.replace(/\s+/g, '_')}`).value;
+                extraServiceConfig[extra].rate = parseInt(val) || 0;
+            }
+
+            // Simpan ke memory lokal Browser
+            localStorage.setItem('ofo_room_rates', JSON.stringify(defaultRoomRates));
+            localStorage.setItem('ofo_extra_rates', JSON.stringify(extraServiceConfig));
+            
+            closeSettingsModal();
+            showNotification("Berhasil", "Pengaturan harga berhasil disimpan. Harga ini otomatis menjadi bawaan saat Anda memilih kamar/layanan baru di form.", "success");
         }
 
         // --- UTILITIES ---
@@ -621,6 +751,18 @@
                 }
             }
 
+            handleRoomChange(); // Set harga default dari pengaturan & update preview
+        }
+        
+        function handleRoomChange() {
+            const selectedRoom = document.getElementById('inpRoom').value;
+            const priceInput = document.getElementById('inpMainPrice');
+            
+            // Set harga otomatis sesuai default yang tersimpan di sistem
+            if (defaultRoomRates[selectedRoom]) {
+                priceInput.value = defaultRoomRates[selectedRoom];
+            }
+            
             updatePreview();
         }
 
@@ -747,7 +889,7 @@
             // Cek otorisasi jika mencoba membuka Kwitansi
             if (tab === 'kwitansi') {
                 if (sessionStorage.getItem('ofo_auth_verified') !== 'true') {
-                    showLoginModal();
+                    showLoginModal('kwitansi');
                     return; // Hentikan eksekusi perpindahan tab
                 }
             }
@@ -1004,6 +1146,7 @@
 
         // Init App
         window.onload = () => {
+            loadConfig(); // Muat pengaturan harga khusus perangkat ini
             initDates();
             handleServiceChange(); // Init room dropdowns & preview
         };
