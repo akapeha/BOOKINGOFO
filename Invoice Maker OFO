@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Portal - OFO KOST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            black: '#111111',
+                            white: '#ffffff',
+                            yellow: '#facc15', // Tailwind yellow-400
+                            gray: '#f9fafb'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+        
+        /* Solusi agar halaman selalu bisa di scroll dengan normal */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        .brand-font { font-family: 'Playfair Display', serif; }
+        
+        /* A4 Paper styling for preview */
+        .paper {
+            width: 100%;
+            max-width: 21cm;
+            min-height: 29.7cm;
+            padding: 2cm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Print styles */
+        @media print {
+            body * { visibility: hidden; }
+            #document-preview-container, #document-preview-container * { visibility: visible; }
+            #document-preview-container { position: absolute; left: 0; top: 0; margin: 0; padding: 0; box-shadow: none; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex flex-col">
+
+    <nav class="bg-brand-black text-white shadow-md z-10 shrink-0 sticky top-0">
+        <div class="px-4 md:px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="OFO.png" alt="OFO Kost Logo" class="h-10 bg-white p-1.5 rounded shadow-sm object-contain">
+                <div>
+                    <p class="text-[9px] md:text-[10px] text-gray-400 uppercase tracking-widest">Internal System</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 md:gap-4 text-sm">
+                <span class="hidden md:inline text-gray-300"><i class="fa-solid fa-user-circle mr-1 text-brand-yellow"></i> Staff Area</span>
+                <button onclick="resetForm()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Reset
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col lg:flex-row w-full max-w-[1600px] mx-auto">
+        
+        <!-- Left Panel: Form Input -->
+        <div class="w-full lg:w-[450px] xl:w-[550px] bg-white border-r border-gray-200 flex flex-col shadow-sm z-0">
+            <div class="p-4 md:p-6 flex-1">
+                <div class="mb-6 flex justify-between items-center border-b pb-4">
+                    <h2 class="text-lg font-bold text-brand-black"><i class="fa-solid fa-pen-to-square text-brand-yellow mr-2"></i>Data Reservasi Baru</h2>
+                </div>
+
+                <form id="internalBookingForm" class="space-y-6">
+                    
+                    <!-- Guest Data -->
+                    <div class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <h3 class="text-sm font-bold uppercase text-gray-500 tracking-wider">Data Tamu</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Nama Lengkap Tamu *</label>
+                            <input type="text" id="inpName" oninput="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black focus:ring-1 focus:ring-brand-black outline-none" placeholder="Masukkan nama tamu">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">No. WhatsApp</label>
+                                <input type="text" id="inpPhone" oninput="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black focus:ring-1 focus:ring-brand-black outline-none" placeholder="08xx">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+                                <input type="email" id="inpEmail" oninput="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black focus:ring-1 focus:ring-brand-black outline-none" placeholder="email@tamu.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <h3 class="text-sm font-bold uppercase text-gray-500 tracking-wider">Detail Layanan & Kamar</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Kategori Layanan *</label>
+                                <select id="inpService" onchange="handleServiceChange()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                    <option value="Hotel">HOTEL</option>
+                                    <option value="Longstay">LONG STAY</option>
+                                    <option value="Kost">KOST</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Tipe Kamar *</label>
+                                <select id="inpRoom" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                    <!-- Diisi oleh JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tanggal Inap -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Tgl Check-in *</label>
+                                <input type="date" id="inpCheckIn" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none">
+                            </div>
+                            
+                            <!-- Container Check-out (Khusus Hotel/Longstay) -->
+                            <div id="containerCheckOut">
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Tgl Check-out *</label>
+                                <input type="date" id="inpCheckOut" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none">
+                            </div>
+
+                            <!-- Container Durasi (Khusus Kost) -->
+                            <div id="containerKostDuration" class="hidden">
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Durasi Kost *</label>
+                                <select id="inpKostDuration" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                    <option value="2 Minggu" data-val="1">2 Minggu</option>
+                                    <option value="1 Bulan" data-val="1">1 Bulan</option>
+                                    <option value="2 Bulan" data-val="2">2 Bulan</option>
+                                    <option value="3 Bulan" data-val="3">3 Bulan</option>
+                                    <option value="4 Bulan" data-val="4">4 Bulan</option>
+                                    <option value="5 Bulan" data-val="5">5 Bulan</option>
+                                    <option value="6 Bulan" data-val="6">6 Bulan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Harga Layanan Utama & Qty -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Jumlah Kamar *</label>
+                                <input type="number" id="inpQtyRoom" value="1" min="1" oninput="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-center">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Tarif (Rate) / Kamar *</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2 text-sm text-gray-500 font-bold">Rp</span>
+                                    <input type="number" id="inpMainPrice" oninput="updatePreview()" class="w-full pl-9 pr-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none font-bold" placeholder="Misal: 150000">
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <p class="text-[10px] text-gray-500">*Tarif dimasukkan per kamar. Total otomatis dihitung: Tarif x Durasi x Jumlah Kamar.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="extraServiceSection" class="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold uppercase text-blue-800 tracking-wider">Extra Service</h3>
+                            <button type="button" onclick="addExtraService()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded shadow-sm">
+                                <i class="fa-solid fa-plus mr-1"></i> Tambah
+                            </button>
+                        </div>
+                        
+                        <!-- List Layanan Tambahan -->
+                        <div id="extraServicesList" class="space-y-3">
+                            <!-- Baris layanan tambahan akan di-inject ke sini oleh JS -->
+                        </div>
+                        <p id="noExtraMsg" class="text-xs text-gray-500 italic">Belum ada layanan tambahan.</p>
+                    </div>
+
+                    <div class="space-y-4 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h3 class="text-sm font-bold uppercase text-yellow-800 tracking-wider">Status & Pembayaran</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Nominal Dibayar (Real) *</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2 text-sm text-gray-500 font-bold">Rp</span>
+                                    <input type="number" id="inpPayment" oninput="updatePreview()" class="w-full pl-9 pr-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-brand-black" placeholder="Cth: 500000">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Status Pembayaran *</label>
+                                <select id="inpStatus" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                    <option value="PAID">LUNAS (Paid)</option>
+                                    <option value="DP">DP (Sebagian)</option>
+                                    <option value="UNPAID">Belum Bayar</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Metode Pembayaran *</label>
+                                <select id="inpMethod" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                    <option value="Transfer Bank Mandiri">Transfer Bank Mandiri</option>
+                                    <option value="QRIS">QRIS</option>
+                                    <option value="Tunai / Cash">Tunai / Cash</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="p-4 border-t border-gray-200 bg-gray-50 sticky bottom-0">
+                <button onclick="saveToSheets()" class="w-full bg-brand-black text-white hover:bg-gray-800 py-3 rounded font-bold shadow flex justify-center items-center gap-2 transition">
+                    <i class="fa-solid fa-cloud-arrow-up text-brand-yellow"></i> Simpan Data (Sheets)
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-gray-200 p-4 md:p-10 flex flex-col items-center">
+            
+            <!-- Toolbar Dokumen -->
+            <div class="w-full max-w-[21cm] bg-white rounded-t shadow-sm border-b p-3 flex flex-wrap justify-between items-center gap-3 no-print sticky top-0 z-10">
+                <div class="flex bg-gray-100 rounded p-1 w-full md:w-auto justify-center">
+                    <button id="tabInvoice" onclick="switchTab('invoice')" class="px-4 py-1.5 text-sm font-semibold rounded bg-white shadow-sm text-brand-black flex-1 md:flex-none">Invoice</button>
+                    <button id="tabKwitansi" onclick="switchTab('kwitansi')" class="px-4 py-1.5 text-sm font-semibold rounded text-gray-500 hover:text-brand-black flex-1 md:flex-none">Kwitansi</button>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto justify-end">
+                    <button onclick="window.print()" class="px-3 py-1.5 text-sm border border-gray-300 bg-white rounded hover:bg-gray-50 flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                    <button onclick="downloadPDF()" class="px-3 py-1.5 text-sm bg-brand-yellow text-brand-black font-bold rounded hover:bg-yellow-500 flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-download"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kertas / Canvas Dokumen -->
+            <div id="document-preview-container" class="paper relative">
+                
+                <div id="view-invoice" class="block">
+                    <!-- Header Invoice -->
+                    <div class="flex justify-between items-start border-b-2 border-brand-black pb-6 mb-6">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <img src="OFO.png" alt="OFO Kost Premium" class="h-16 object-contain">
+                            </div>
+                            <p class="text-xs text-gray-600">Jl. Kemuning, Mangunrejo, Tulungrejo, Kec. Pare<br>Kabupaten Kediri | WA: 0895-4137-94717</p>
+                        </div>
+                        <div class="text-right">
+                            <h2 class="text-3xl font-black text-gray-300 tracking-widest uppercase mb-1">Invoice</h2>
+                            <p class="font-bold text-brand-black text-sm"><span id="outInvNumber">...</span></p>
+                            <p class="text-xs text-gray-500 mt-1">Tgl Terbit: <span id="outDate">...</span></p>
+                            <div class="mt-2 inline-block px-3 py-1 text-xs font-bold rounded" id="outInvStatusBadge">
+                                UNPAID
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Info -->
+                    <div class="grid grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Ditagihkan Kepada:</p>
+                            <p class="font-bold text-sm text-brand-black" id="outName">-</p>
+                            <p class="text-xs text-gray-600" id="outContact">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Detail Sewa:</p>
+                            <table class="w-full text-xs">
+                                <tr><td class="text-gray-500 py-0.5">Check-in</td><td class="font-semibold text-right" id="outCheckIn">-</td></tr>
+                                <tr id="rowOutCheckOut"><td class="text-gray-500 py-0.5">Check-out</td><td class="font-semibold text-right" id="outCheckOut">-</td></tr>
+                                <tr><td class="text-gray-500 py-0.5">Durasi</td><td class="font-semibold text-right" id="outDuration">-</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Table Rincian Tagihan -->
+                    <table class="w-full text-left border-collapse text-sm mb-6">
+                        <thead>
+                            <tr class="border-y-2 border-brand-black bg-gray-50">
+                                <th class="py-2 px-2 font-bold text-brand-black">Deskripsi Layanan</th>
+                                <th class="py-2 px-2 font-bold text-brand-black text-center">Qty / Durasi</th>
+                                <th class="py-2 px-2 font-bold text-brand-black text-right">Harga Satuan</th>
+                                <th class="py-2 px-2 font-bold text-brand-black text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-items">
+                            <!-- JS akan mengisi baris kamar dan extra service di sini -->
+                        </tbody>
+                    </table>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-start mt-8 gap-6">
+                        <div class="w-full sm:w-1/2">
+                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Instruksi Pembayaran:</p>
+                            <div class="border border-gray-200 p-3 rounded text-xs bg-gray-50">
+                                <p class="font-bold text-sm">Mandiri: 171-05-00004-000</p>
+                                <p class="text-gray-600 mb-2">A/N OFO KOST MANAGEMENT</p>
+                                <p class="italic text-gray-500">Menerima pembayaran melalui Transfer Mandiri, QRIS, dan Tunai.</p>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-1/2">
+                            <div class="flex justify-between py-2 text-sm border-b border-gray-200">
+                                <span class="text-gray-600">Total Tagihan (Grand Total)</span>
+                                <span class="font-bold" id="outGrandTotal">-</span>
+                            </div>
+                            <div class="flex justify-between py-2 text-sm border-b border-gray-200 text-green-700">
+                                <span>Nominal Telah Dibayar</span>
+                                <span class="font-bold" id="outPaid">-</span>
+                            </div>
+                            <div class="flex justify-between py-3 text-lg font-bold text-brand-black bg-gray-100 px-3 mt-2 rounded">
+                                <span>Sisa Tagihan</span>
+                                <span id="outBalance" class="text-red-600">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kebijakan & Catatan Penting -->
+                    <div class="mt-6 border-t border-gray-300 pt-4 text-[9px] leading-tight flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <p class="font-bold uppercase mb-1.5 text-gray-800 text-[10px]">Kebijakan Pemesanan</p>
+                            <ul class="list-disc pl-3 text-gray-600 space-y-0.5">
+                                <li>Pembayaran DP maupun pelunasan dapat dilakukan melalui transfer Mandiri / QRIS / cash saat check in.</li>
+                                <li>Pembatalan mendadak (≤ H-3 sebelum check in) dikenakan biaya 100% dari total pemesanan.</li>
+                                <li>Seluruh pembayaran yang telah dilakukan tidak dapat direfund.</li>
+                            </ul>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold uppercase mb-1.5 text-gray-800 text-[10px]">Catatan Penting!</p>
+                            <ul class="list-disc pl-3 text-gray-600 space-y-0.5">
+                                <li><span class="font-bold text-brand-black">OFO Kost berbasis syariah</span> (Dilarang membawa tamu lawan jenis yang belum sah)</li>
+                                <li>Harap menjaga kebersihan kamar & lingkungan OFO Kost.</li>
+                                <li>Ketentuan jam check in pukul 14.00 dan check out pukul 12.00.</li>
+                                <li>Dilarang merokok di area kamar (gunakan Area Merokok di Taman OFO).</li>
+                                <li>Dilarang membuat keributan yang mengganggu ketenangan penghuni lain.</li>
+                                <li>Dilarang merusak fasilitas atau barang milik kost.</li>
+                                <li>Dilarang menggunakan alat listrik berdaya tinggi tanpa izin.</li>
+                                <li>Dilarang membawa hewan peliharaan, tanpa seizin pengelola.</li>
+                            </ul>
+                            <p class="mt-1.5 font-bold text-red-600 italic">⚠️ Denda pelanggaran mulai dari Rp100.000 hingga biaya pengganti barang jika terjadi kerusakan fasilitas.</p>
+                            <p class="mt-1 font-bold text-brand-black">✅ Dengan pemesanan ini, saya menyatakan telah membaca, memahami, dan menyetujui seluruh peraturan di atas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-kwitansi" class="hidden">
+                    <div class="border-[6px] border-double border-gray-400 p-8 min-h-[14cm] flex flex-col relative">
+                        <!-- Background Watermark -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                            <img src="OFO.png" alt="Watermark" class="w-[350px] grayscale object-contain">
+                        </div>
+
+                        <div class="flex justify-between items-start border-b-2 border-brand-black pb-4 mb-8 z-10">
+                            <div class="flex items-center gap-2">
+                                <img src="OFO.png" alt="OFO Kost Premium" class="h-16 object-contain">
+                            </div>
+                            <div class="text-right">
+                                <h2 class="text-3xl font-black text-brand-black tracking-widest uppercase mb-1">KWITANSI</h2>
+                                <p class="text-gray-600 text-sm font-semibold">No. <span id="kwiNumber">...</span></p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6 text-sm flex-1 z-10">
+                            <div class="flex pb-2">
+                                <div class="w-48 font-bold text-gray-700 uppercase tracking-wide">Telah Terima Dari</div>
+                                <div class="w-4">:</div>
+                                <div class="flex-1 font-bold text-lg text-brand-black border-b border-dotted border-gray-400 pb-1" id="kwiName">-</div>
+                            </div>
+                            
+                            <div class="flex pb-2">
+                                <div class="w-48 font-bold text-gray-700 uppercase tracking-wide">Uang Sejumlah</div>
+                                <div class="w-4">:</div>
+                                <div class="flex-1 bg-gray-100/80 px-4 py-3 italic text-gray-800 font-bold rounded border border-gray-200" id="kwiTerbilang">
+                                    <!-- Terbilang text -->
+                                    -
+                                </div>
+                            </div>
+                            
+                            <div class="flex pb-2">
+                                <div class="w-48 font-bold text-gray-700 uppercase tracking-wide">Untuk Pembayaran</div>
+                                <div class="w-4">:</div>
+                                <div class="flex-1 text-gray-800 font-medium leading-relaxed border-b border-dotted border-gray-400 pb-1 min-h-[3rem]" id="kwiDesc">
+                                    -
+                                </div>
+                            </div>
+                            
+                            <div class="flex pb-2">
+                                <div class="w-48 font-bold text-gray-700 uppercase tracking-wide">Metode Bayar</div>
+                                <div class="w-4">:</div>
+                                <div class="flex-1 font-bold text-brand-black border-b border-dotted border-gray-400 pb-1" id="kwiMethod">
+                                    -
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-between items-end z-10">
+                            <div class="bg-gray-100 border-2 border-brand-black text-brand-black font-black text-2xl px-8 py-4 rounded shadow-sm flex items-center gap-3">
+                                <span class="text-sm font-bold text-gray-500">Rp</span> 
+                                <span id="kwiTotal">0</span>
+                            </div>
+                            <div class="text-center w-48">
+                                <p class="text-sm mb-2 text-gray-600">Jakarta, <span id="kwiDate" class="font-bold text-brand-black">...</span></p>
+                                <p class="text-sm mb-16">Penerima,</p>
+                                <p class="font-bold border-b border-black w-full inline-block">( OFO Management )</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Data Master
+        const roomData = {
+            Hotel: ['Twin Room', 'Superior room'],
+            Longstay: ['Longstay Productive', 'Longstay Smart twin'],
+            Kost: ['Kost Sharing', 'Kost Private']
+        };
+
+        const extraServiceConfig = {
+            'Early check in': { rate: 20000, label: 'Jam' },
+            'Late Check out': { rate: 20000, label: 'Jam' },
+            'Extra Bed': { rate: 100000, label: 'Malam' },
+            'Bantal': { rate: 50000, label: 'Malam' },
+            'Selimut': { rate: 100000, label: 'Malam' },
+            'Handuk': { rate: 10000, label: 'Malam' },
+            'Breakfast': { rate: 20000, label: 'Pax/Malam' },
+            'Lainnya': { rate: 0, label: 'Custom' }
+        };
+
+        let activeInvoiceBase = 1200;
+        let activeInvoiceNum = ""; 
+        let currentTab = 'invoice';
+        let extraCounter = 0;
+
+        // --- UTILITIES ---
+        function generateInvoiceString(baseNum, dateStr) {
+            const d = new Date(dateStr);
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = String(d.getFullYear()).slice(-2);
+            return `INV-${baseNum}/OFO/${mm}${yy}`;
+        }
+        function formatRp(angka) { return new Intl.NumberFormat('id-ID').format(angka || 0); }
+        
+        function formatDate(dateStr) {
+            if(!dateStr) return "-";
+            const options = { day: '2-digit', month: 'short', year: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('id-ID', options);
+        }
+
+        async function saveToSheets() {
+            const name = document.getElementById('inpName').value;
+            if(!name) { alert("Nama tamu wajib diisi sebelum menyimpan!"); return; }
+
+            // Kumpulkan data sesuai struktur Google Sheets
+            const service = document.getElementById('inpService').value;
+            const checkIn = document.getElementById('inpCheckIn').value;
+            const checkOut = service === 'Kost' ? '-' : document.getElementById('inpCheckOut').value;
+            const kostDurSelect = document.getElementById('inpKostDuration');
+            const kostDurText = kostDurSelect.options[kostDurSelect.selectedIndex].text;
+            const kostDurVal = parseFloat(kostDurSelect.options[kostDurSelect.selectedIndex].getAttribute('data-val')) || 1;
+            
+            let durText = service === 'Kost' ? kostDurText : `${calcNights(checkIn, checkOut)} Malam`;
+            let durNumber = service === 'Kost' ? kostDurVal : calcNights(checkIn, checkOut);
+            
+            const qtyRoom = parseInt(document.getElementById('inpQtyRoom').value) || 1;
+            const ratePrice = parseInt(document.getElementById('inpMainPrice').value) || 0;
+            const totalRoomPrice = ratePrice * durNumber * qtyRoom;
+
+            // Extra Services Processing
+            let extraServiceNames = [];
+            let extraServicePrices = [];
+            let extraServiceDurs = [];
+            let extraServiceQtys = [];
+            let totalExtraPrice = 0;
+            
+            document.querySelectorAll('.extra-item').forEach(item => {
+                const type = item.querySelector('.ex-type').value;
+                let itemName = type === 'Lainnya' ? (item.querySelector('.ex-custom-name').value || 'Custom') : type;
+                let rate = type === 'Lainnya' ? (parseInt(item.querySelector('.ex-custom-rate').value) || 0) : (parseInt(item.querySelector('.ex-rate').value) || 0);
+                const qty = parseInt(item.querySelector('.ex-qty').value) || 1;
+                const dur = parseInt(item.querySelector('.ex-dur').value) || 1;
+                
+                let sub = qty * dur * rate;
+                totalExtraPrice += sub;
+                
+                extraServiceNames.push(itemName);
+                extraServicePrices.push(rate);
+                extraServiceDurs.push(dur);
+                extraServiceQtys.push(qty);
+            });
+
+            const payload = {
+                "INPUT DATE": new Date().toISOString().split('T')[0],
+                "INVOICE NUMBER": activeInvoiceNum,
+                "NAME": name,
+                "STATUS": document.getElementById('inpStatus').value,
+                "CHECK IN": checkIn,
+                "CHECK OUT": checkOut,
+                "ITEM SERVICE": `${service} - ${document.getElementById('inpRoom').value}`,
+                "BOOKING SOURCE": "Walk in",
+                "RATE": ratePrice,
+                "DURATION": durText,
+                "QTY": qtyRoom,
+                "Ocupancy": durNumber * qtyRoom,
+                "Total Room Price": totalRoomPrice,
+                "EXTRA SERVICE": extraServiceNames.join(", ") || "-",
+                "Extra service Price": extraServicePrices.join(", ") || "0",
+                "Extra Duration": extraServiceDurs.join(", ") || "0",
+                "Extra QTY": extraServiceQtys.join(", ") || "0",
+                "Total extra price": totalExtraPrice,
+                "Total Price": totalRoomPrice + totalExtraPrice
+            };
+
+            // Mengubah status tombol saat loading
+            const btn = document.querySelector('button[onclick="saveToSheets()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-brand-yellow"></i> Menyimpan...';
+            btn.disabled = true;
+
+            try {
+                // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+                // Formatnya: 'https://script.google.com/macros/s/AKfycby.../exec'
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyfsfcNt5WYN0fso1YIvvIlPs2bNi4Kn4yP4xzr5ZO12kePv-GX-loAxjehtKe67m9j/exec'; 
+                
+                if (scriptURL === 'https://script.google.com/macros/s/AKfycbyfsfcNt5WYN0fso1YIvvIlPs2bNi4Kn4yP4xzr5ZO12kePv-GX-loAxjehtKe67m9j/exec') {
+                    // Mode Simulasi (Bisa Anda gunakan saat testing awal)
+                    console.log("Data Payload:", payload);
+                    alert(`⚠️ SIMULASI: Anda belum memasukkan URL Google Script.\n\nData atas nama ${payload.NAME} dengan total Rp ${formatRp(payload["Total Price"])} akan dikirim ke Sheets jika URL sudah dipasang.`);
+                    activeInvoiceBase++;
+                    updatePreview();
+                } else {
+                    // Mode Live: Mengirim data ke Google Sheets menggunakan API fetch
+                    const response = await fetch(scriptURL, {
+                        method: 'POST',
+                        // Menggunakan text/plain untuk menghindari issue preflight CORS di Google Apps Script
+                        body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.result === "success") {
+                        alert(`✅ Data berhasil disimpan ke Google Sheets!\nNomor Invoice: ${activeInvoiceNum}`);
+                        activeInvoiceBase++; // Tambah nomor invoice
+                        
+                        // Opsional: Jika ingin form otomatis kosong setelah simpan, buka komentar di bawah:
+                        // document.getElementById('internalBookingForm').reset();
+                        // handleServiceChange();
+                        
+                        updatePreview();
+                    } else {
+                        throw new Error(result.message || 'Gagal menyimpan data.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error!', error.message);
+                alert('❌ Terjadi kesalahan saat menyimpan data: ' + error.message);
+            } finally {
+                // Kembalikan tombol seperti semula
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('document-preview-container');
+            const prefix = currentTab === 'invoice' ? 'INV' : 'KWI';
+            const guest = document.getElementById('inpName').value.replace(/\s+/g, '_') || 'Tamu';
+            const filename = `${prefix}_OFO_${activeInvoiceNum}_${guest}.pdf`;
+            
+            const opt = {
+                margin:       0,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Loading state on button is optional, generating immediately
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function initDates() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            document.getElementById('inpCheckIn').value = today.toISOString().split('T')[0];
+            document.getElementById('inpCheckOut').value = tomorrow.toISOString().split('T')[0];
+        }
+
+        // Init App
+        window.onload = () => {
+            initDates();
+            handleServiceChange(); // Init room dropdowns & preview
+        };
+    </script>
+</body>
+</html>
