@@ -64,7 +64,11 @@
     <nav class="bg-brand-black text-white shadow-md z-10 shrink-0 sticky top-0">
         <div class="px-4 md:px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <img src="OFO.png" alt="OFO Kost Logo" class="h-10 bg-white p-1.5 rounded shadow-sm object-contain">
+                <!-- LOGO TYPOGRAPHY ALTERNATIVE -->
+                <div class="bg-white px-3 py-1.5 rounded shadow-sm flex flex-col items-center justify-center leading-none">
+                    <span class="text-xl font-black text-brand-black tracking-tighter">OFO</span>
+                    <span class="text-[6px] font-bold text-gray-800 tracking-[0.2em] mt-0.5">KOST PREMIUM</span>
+                </div>
                 <div>
                     <p class="text-[9px] md:text-[10px] text-gray-400 uppercase tracking-widest">Internal System</p>
                 </div>
@@ -256,9 +260,13 @@
                     <div class="flex justify-between items-start border-b-2 border-brand-black pb-6 mb-6">
                         <div>
                             <div class="flex items-center gap-2 mb-2">
-                                <img src="OFO.png" alt="OFO Kost Premium" class="h-16 object-contain">
+                                <!-- LOGO TYPOGRAPHY ALTERNATIVE -->
+                                <div class="flex flex-col items-start leading-none">
+                                    <span class="text-4xl font-black text-brand-black tracking-tighter">OFO</span>
+                                    <span class="text-[10px] font-bold text-gray-800 tracking-[0.2em] mt-1">KOST PREMIUM</span>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-600">Jl. Kemuning, Mangunrejo, Tulungrejo, Kec. Pare<br>Kabupaten Kediri | WA: 0895-4137-94717</p>
+                            <p class="text-xs text-gray-600 mt-2">Jl. Kemuning, Mangunrejo, Tulungrejo, Kec. Pare<br>Kabupaten Kediri | WA: 0895-4137-94717</p>
                         </div>
                         <div class="text-right">
                             <h2 class="text-3xl font-black text-gray-300 tracking-widest uppercase mb-1">Invoice</h2>
@@ -307,7 +315,7 @@
                             <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Instruksi Pembayaran:</p>
                             <div class="border border-gray-200 p-3 rounded text-xs bg-gray-50">
                                 <p class="font-bold text-sm">Mandiri: 171-05-00004-000</p>
-                                <p class="text-gray-600 mb-2">A/N OFO KOST MANAGEMENT</p>
+                                <p class="text-gray-600 mb-2">A/N ARAN RUANGAN KERJA</p>
                                 <p class="italic text-gray-500">Menerima pembayaran melalui Transfer Mandiri, QRIS, dan Tunai.</p>
                             </div>
                         </div>
@@ -356,15 +364,20 @@
                 </div>
 
                 <div id="view-kwitansi" class="hidden">
-                    <div class="border-[6px] border-double border-gray-400 p-8 min-h-[14cm] flex flex-col relative">
-                        <!-- Background Watermark -->
-                        <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-                            <img src="OFO.png" alt="Watermark" class="w-[350px] grayscale object-contain">
+                    <div class="border-[6px] border-double border-gray-400 p-8 min-h-[14cm] flex flex-col relative overflow-hidden">
+                        <!-- Background Watermark (CSS Alternative) -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center opacity-[0.03] pointer-events-none select-none -rotate-12">
+                            <span class="text-[150px] font-black text-black tracking-tighter leading-none">OFO</span>
+                            <span class="text-[24px] font-bold text-black tracking-[0.4em] mt-2">KOST PREMIUM</span>
                         </div>
 
                         <div class="flex justify-between items-start border-b-2 border-brand-black pb-4 mb-8 z-10">
                             <div class="flex items-center gap-2">
-                                <img src="OFO.png" alt="OFO Kost Premium" class="h-16 object-contain">
+                                <!-- LOGO TYPOGRAPHY ALTERNATIVE -->
+                                <div class="flex flex-col items-start leading-none">
+                                    <span class="text-4xl font-black text-brand-black tracking-tighter">OFO</span>
+                                    <span class="text-[10px] font-bold text-gray-800 tracking-[0.2em] mt-1">KOST PREMIUM</span>
+                                </div>
                             </div>
                             <div class="text-right">
                                 <h2 class="text-3xl font-black text-brand-black tracking-widest uppercase mb-1">KWITANSI</h2>
@@ -462,6 +475,265 @@
             return new Date(dateStr).toLocaleDateString('id-ID', options);
         }
 
+        function terbilang(angka) {
+            const huruf = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+            let res = "";
+            if (angka < 12) res = huruf[angka];
+            else if (angka < 20) res = terbilang(angka - 10) + " Belas";
+            else if (angka < 100) res = terbilang(Math.floor(angka / 10)) + " Puluh " + terbilang(angka % 10);
+            else if (angka < 200) res = "Seratus " + terbilang(angka - 100);
+            else if (angka < 1000) res = terbilang(Math.floor(angka / 100)) + " Ratus " + terbilang(angka % 100);
+            else if (angka < 2000) res = "Seribu " + terbilang(angka - 1000);
+            else if (angka < 1000000) res = terbilang(Math.floor(angka / 1000)) + " Ribu " + terbilang(angka % 1000);
+            else if (angka < 1000000000) res = terbilang(Math.floor(angka / 1000000)) + " Juta " + terbilang(angka % 1000000);
+            return res.trim();
+        }
+
+        function calcNights(checkIn, checkOut) {
+            if (!checkIn || !checkOut) return 1;
+            const start = new Date(checkIn);
+            const end = new Date(checkOut);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            return diffDays > 0 ? diffDays : 1;
+        }
+
+        function handleServiceChange() {
+            const service = document.getElementById('inpService').value;
+            const roomSelect = document.getElementById('inpRoom');
+            roomSelect.innerHTML = '';
+            
+            if (roomData[service]) {
+                roomData[service].forEach(room => {
+                    const opt = document.createElement('option');
+                    opt.value = room;
+                    opt.textContent = room;
+                    roomSelect.appendChild(opt);
+                });
+            }
+
+            const checkoutContainer = document.getElementById('containerCheckOut');
+            const kostDurationContainer = document.getElementById('containerKostDuration');
+
+            if (service === 'Kost') {
+                checkoutContainer.classList.add('hidden');
+                kostDurationContainer.classList.remove('hidden');
+            } else {
+                checkoutContainer.classList.remove('hidden');
+                kostDurationContainer.classList.add('hidden');
+            }
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const name = document.getElementById('inpName').value || 'Nama Tamu';
+            const phone = document.getElementById('inpPhone').value || '-';
+            const email = document.getElementById('inpEmail').value || '-';
+            const service = document.getElementById('inpService').value;
+            const room = document.getElementById('inpRoom').value;
+            const checkIn = document.getElementById('inpCheckIn').value;
+            const checkOut = document.getElementById('inpCheckOut').value;
+            
+            const qtyRoom = parseInt(document.getElementById('inpQtyRoom').value) || 1;
+            const mainPrice = parseInt(document.getElementById('inpMainPrice').value) || 0;
+            const payment = parseInt(document.getElementById('inpPayment').value) || 0;
+            const status = document.getElementById('inpStatus').value;
+            const method = document.getElementById('inpMethod').value;
+            
+            const kostDurSelect = document.getElementById('inpKostDuration');
+            const kostDurText = kostDurSelect.options[kostDurSelect.selectedIndex].text;
+            const kostDurVal = parseInt(kostDurSelect.options[kostDurSelect.selectedIndex].getAttribute('data-val')) || 1;
+
+            let nights = service === 'Kost' ? kostDurVal : calcNights(checkIn, checkOut);
+            let durationText = service === 'Kost' ? kostDurText : `${nights} Malam`;
+
+            let roomTotal = mainPrice * nights * qtyRoom;
+            
+            let extraTotal = 0;
+            let extraHtml = '';
+            document.querySelectorAll('.extra-item').forEach(item => {
+                const type = item.querySelector('.ex-type').value;
+                const customName = item.querySelector('.ex-custom-name') ? item.querySelector('.ex-custom-name').value : '';
+                const rate = parseInt(type === 'Lainnya' ? item.querySelector('.ex-custom-rate').value : item.querySelector('.ex-rate').value) || 0;
+                const qty = parseInt(item.querySelector('.ex-qty').value) || 1;
+                const dur = parseInt(item.querySelector('.ex-dur').value) || 1;
+                
+                const subTotal = rate * qty * dur;
+                extraTotal += subTotal;
+                
+                let itemName = type === 'Lainnya' ? (customName || 'Custom Service') : type;
+                
+                extraHtml += `
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 px-2 text-gray-700">${itemName}</td>
+                        <td class="py-2 px-2 text-center text-gray-700">${qty}x / ${dur}</td>
+                        <td class="py-2 px-2 text-right text-gray-700">${formatRp(rate)}</td>
+                        <td class="py-2 px-2 text-right font-medium text-brand-black">${formatRp(subTotal)}</td>
+                    </tr>
+                `;
+            });
+
+            const grandTotal = roomTotal + extraTotal;
+            const balance = grandTotal - payment;
+
+            const dateStr = checkIn || new Date().toISOString().split('T')[0];
+            activeInvoiceNum = generateInvoiceString(activeInvoiceBase, dateStr);
+
+            document.getElementById('outInvNumber').textContent = activeInvoiceNum;
+            document.getElementById('outDate').textContent = formatDate(new Date().toISOString().split('T')[0]);
+            
+            const badge = document.getElementById('outInvStatusBadge');
+            if(status === 'PAID') {
+                badge.className = "mt-2 inline-block px-3 py-1 text-xs font-bold rounded bg-green-100 text-green-800";
+                badge.textContent = "LUNAS (PAID)";
+            } else if(status === 'DP') {
+                badge.className = "mt-2 inline-block px-3 py-1 text-xs font-bold rounded bg-yellow-100 text-yellow-800";
+                badge.textContent = "DP (SEBAGIAN)";
+            } else {
+                badge.className = "mt-2 inline-block px-3 py-1 text-xs font-bold rounded bg-red-100 text-red-800";
+                badge.textContent = "UNPAID";
+            }
+
+            document.getElementById('outName').textContent = name;
+            document.getElementById('outContact').textContent = `${phone} | ${email}`;
+            document.getElementById('outCheckIn').textContent = formatDate(checkIn);
+            
+            if(service === 'Kost') {
+                document.getElementById('rowOutCheckOut').style.display = 'none';
+            } else {
+                document.getElementById('rowOutCheckOut').style.display = 'table-row';
+                document.getElementById('outCheckOut').textContent = formatDate(checkOut);
+            }
+            document.getElementById('outDuration').textContent = durationText;
+
+            let invoiceItemsHtml = `
+                <tr class="border-b border-gray-100">
+                    <td class="py-2 px-2 font-medium text-gray-800">${service} - ${room}</td>
+                    <td class="py-2 px-2 text-center text-gray-700">${qtyRoom} Kamar / ${durationText}</td>
+                    <td class="py-2 px-2 text-right text-gray-700">${formatRp(mainPrice)}</td>
+                    <td class="py-2 px-2 text-right font-medium text-brand-black">${formatRp(roomTotal)}</td>
+                </tr>
+            `;
+            invoiceItemsHtml += extraHtml;
+            
+            document.getElementById('invoice-items').innerHTML = invoiceItemsHtml;
+            
+            document.getElementById('outGrandTotal').textContent = `Rp ${formatRp(grandTotal)}`;
+            document.getElementById('outPaid').textContent = `Rp ${formatRp(payment)}`;
+            document.getElementById('outBalance').textContent = `Rp ${formatRp(balance < 0 ? 0 : balance)}`;
+
+            document.getElementById('kwiNumber').textContent = activeInvoiceNum;
+            document.getElementById('kwiName').textContent = name;
+            document.getElementById('kwiTotal').textContent = formatRp(payment);
+            document.getElementById('kwiDate').textContent = formatDate(new Date().toISOString().split('T')[0]);
+            document.getElementById('kwiMethod').textContent = method;
+            
+            let desc = `Pembayaran ${status === 'DP' ? 'DP' : 'Pelunasan'} Sewa ${service} (${room}) untuk ${qtyRoom} kamar selama ${durationText}.`;
+            if (extraTotal > 0) desc += ` Termasuk biaya layanan tambahan.`;
+            document.getElementById('kwiDesc').textContent = desc;
+            
+            document.getElementById('kwiTerbilang').textContent = terbilang(payment) + " Rupiah";
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('view-invoice').classList.toggle('hidden', tab !== 'invoice');
+            document.getElementById('view-invoice').classList.toggle('block', tab === 'invoice');
+            
+            document.getElementById('view-kwitansi').classList.toggle('hidden', tab !== 'kwitansi');
+            document.getElementById('view-kwitansi').classList.toggle('block', tab === 'kwitansi');
+            
+            document.getElementById('tabInvoice').className = tab === 'invoice' ? 'px-4 py-1.5 text-sm font-semibold rounded bg-white shadow-sm text-brand-black flex-1 md:flex-none' : 'px-4 py-1.5 text-sm font-semibold rounded text-gray-500 hover:text-brand-black flex-1 md:flex-none';
+            document.getElementById('tabKwitansi').className = tab === 'kwitansi' ? 'px-4 py-1.5 text-sm font-semibold rounded bg-white shadow-sm text-brand-black flex-1 md:flex-none' : 'px-4 py-1.5 text-sm font-semibold rounded text-gray-500 hover:text-brand-black flex-1 md:flex-none';
+        }
+
+        function resetForm() {
+            document.getElementById('internalBookingForm').reset();
+            document.getElementById('extraServicesList').innerHTML = '';
+            extraCounter = 0;
+            document.getElementById('noExtraMsg').style.display = 'block';
+            initDates();
+            handleServiceChange();
+        }
+
+        function addExtraService() {
+            extraCounter++;
+            const id = `extra-${extraCounter}`;
+            const list = document.getElementById('extraServicesList');
+            document.getElementById('noExtraMsg').style.display = 'none';
+            
+            let options = '';
+            for(let key in extraServiceConfig) {
+                options += `<option value="${key}">${key}</option>`;
+            }
+
+            const div = document.createElement('div');
+            div.className = 'extra-item flex flex-col md:flex-row gap-2 bg-white p-2 border border-blue-200 rounded relative items-start md:items-center';
+            div.id = id;
+            
+            div.innerHTML = `
+                <div class="flex-1 w-full">
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Layanan</label>
+                    <select class="ex-type w-full text-xs p-1 border rounded" onchange="handleExtraTypeChange('${id}')">
+                        ${options}
+                    </select>
+                    <div class="custom-fields hidden mt-1">
+                        <input type="text" class="ex-custom-name w-full text-xs p-1 border rounded mb-1" placeholder="Nama Layanan">
+                        <input type="number" class="ex-custom-rate w-full text-xs p-1 border rounded" placeholder="Tarif Custom" oninput="updatePreview()">
+                    </div>
+                </div>
+                <div class="w-full md:w-24">
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Tarif (<span class="ex-label">Jam</span>)</label>
+                    <input type="number" class="ex-rate w-full text-xs p-1 border rounded bg-gray-50" readonly value="${extraServiceConfig['Early check in'].rate}">
+                </div>
+                <div class="w-full md:w-16">
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Durasi</label>
+                    <input type="number" class="ex-dur w-full text-xs p-1 border rounded" value="1" min="1" oninput="updatePreview()">
+                </div>
+                <div class="w-full md:w-16">
+                    <label class="block text-[10px] text-gray-500 mb-0.5">Qty</label>
+                    <input type="number" class="ex-qty w-full text-xs p-1 border rounded" value="1" min="1" oninput="updatePreview()">
+                </div>
+                <button type="button" onclick="removeExtraService('${id}')" class="text-red-500 hover:text-red-700 p-1 w-full md:w-auto text-right md:text-left mt-2 md:mt-0">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            
+            list.appendChild(div);
+            handleExtraTypeChange(id);
+            updatePreview();
+        }
+
+        function handleExtraTypeChange(id) {
+            const container = document.getElementById(id);
+            const type = container.querySelector('.ex-type').value;
+            const rateInput = container.querySelector('.ex-rate');
+            const labelSpan = container.querySelector('.ex-label');
+            const customFields = container.querySelector('.custom-fields');
+            
+            const config = extraServiceConfig[type];
+            rateInput.value = config.rate;
+            labelSpan.textContent = config.label;
+            
+            if(type === 'Lainnya') {
+                customFields.classList.remove('hidden');
+                rateInput.closest('div').classList.add('hidden');
+            } else {
+                customFields.classList.add('hidden');
+                rateInput.closest('div').classList.remove('hidden');
+            }
+            updatePreview();
+        }
+
+        function removeExtraService(id) {
+            document.getElementById(id).remove();
+            if(document.querySelectorAll('.extra-item').length === 0) {
+                document.getElementById('noExtraMsg').style.display = 'block';
+            }
+            updatePreview();
+        }
+
         async function saveToSheets() {
             const name = document.getElementById('inpName').value;
             if(!name) { alert("Nama tamu wajib diisi sebelum menyimpan!"); return; }
@@ -537,7 +809,7 @@
                 // Formatnya: 'https://script.google.com/macros/s/AKfycby.../exec'
                 const scriptURL = 'https://script.google.com/macros/s/AKfycbyfsfcNt5WYN0fso1YIvvIlPs2bNi4Kn4yP4xzr5ZO12kePv-GX-loAxjehtKe67m9j/exec'; 
                 
-                if (scriptURL === 'https://script.google.com/macros/s/AKfycbyfsfcNt5WYN0fso1YIvvIlPs2bNi4Kn4yP4xzr5ZO12kePv-GX-loAxjehtKe67m9j/exec') {
+                if (scriptURL === 'ISI_DENGAN_URL_WEB_APP_ANDA_DISINI') {
                     // Mode Simulasi (Bisa Anda gunakan saat testing awal)
                     console.log("Data Payload:", payload);
                     alert(`⚠️ SIMULASI: Anda belum memasukkan URL Google Script.\n\nData atas nama ${payload.NAME} dengan total Rp ${formatRp(payload["Total Price"])} akan dikirim ke Sheets jika URL sudah dipasang.`);
