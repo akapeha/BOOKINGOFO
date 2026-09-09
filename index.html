@@ -20,15 +20,14 @@
                         }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Playfair Display', 'serif']
+                        sans: ['Inter', 'sans-serif']
                     }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
         /* Solusi agar halaman selalu bisa di scroll dengan normal */
         body { 
@@ -36,8 +35,6 @@
             background-color: #f3f4f6;
             min-height: 100vh;
         }
-        
-        .brand-font { font-family: 'Playfair Display', serif; }
         
         /* A4 Paper styling for preview */
         .paper {
@@ -64,10 +61,9 @@
     <nav class="bg-brand-black text-white shadow-md z-10 shrink-0 sticky top-0">
         <div class="px-4 md:px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <!-- LOGO TYPOGRAPHY ALTERNATIVE -->
-                <div class="bg-white px-3 py-1.5 rounded shadow-sm flex flex-col items-center justify-center leading-none">
-                    <span class="text-xl font-black text-brand-black tracking-tighter">OFO</span>
-                    <span class="text-[6px] font-bold text-gray-800 tracking-[0.2em] mt-0.5">KOST PREMIUM</span>
+                <!-- LOGO IMAGE -->
+                <div class="bg-white px-2 py-1 rounded shadow-sm flex items-center justify-center h-10 w-24">
+                    <img src="OFO.png" alt="OFO Kost Premium" class="h-full w-full object-contain">
                 </div>
                 <div>
                     <p class="text-[9px] md:text-[10px] text-gray-400 uppercase tracking-widest">Internal System</p>
@@ -256,128 +252,143 @@
             <div id="document-preview-container" class="paper relative">
                 
                 <div id="view-invoice" class="block">
+                    <!-- Aksen Garis Emas di Atas Kertas -->
+                    <div class="absolute top-0 left-0 w-full h-2 bg-brand-yellow"></div>
+
                     <!-- Header Invoice -->
-                    <div class="flex justify-between items-start border-b-2 border-brand-black pb-6 mb-6">
+                    <div class="flex justify-between items-start pb-8 mb-8 border-b border-gray-200 mt-4">
                         <div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <!-- LOGO TYPOGRAPHY ALTERNATIVE -->
-                                <div class="flex flex-col items-start leading-none">
-                                    <span class="text-4xl font-black text-brand-black tracking-tighter">OFO</span>
-                                    <span class="text-[10px] font-bold text-gray-800 tracking-[0.2em] mt-1">KOST PREMIUM</span>
-                                </div>
+                            <div class="mb-4 w-32 h-12">
+                                <!-- LOGO IMAGE -->
+                                <img src="OFO.png" alt="OFO Kost Premium" class="w-full h-full object-contain object-left">
                             </div>
-                            <p class="text-xs text-gray-600 mt-2">Jl. Kemuning, Mangunrejo, Tulungrejo, Kec. Pare<br>Kabupaten Kediri | WA: 0895-4137-94717</p>
+                            <div class="text-[11px] text-gray-500 leading-relaxed">
+                                <p class="font-bold text-brand-black uppercase tracking-wider mb-1">OFO KOST MANAGEMENT</p>
+                                <p>Jl. Kemuning, Mangunrejo, Tulungrejo</p>
+                                <p>Kec. Pare, Kabupaten Kediri</p>
+                                <p>WA: 0895-4137-94717</p>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <h2 class="text-3xl font-black text-gray-300 tracking-widest uppercase mb-1">Invoice</h2>
-                            <p class="font-bold text-brand-black text-sm"><span id="outInvNumber">...</span></p>
-                            <p class="text-xs text-gray-500 mt-1">Tgl Terbit: <span id="outDate">...</span></p>
-                            <div class="mt-2 inline-block px-3 py-1 text-xs font-bold rounded" id="outInvStatusBadge">
+                        <div class="text-right flex flex-col items-end">
+                            <h2 class="text-4xl font-black text-brand-black tracking-[0.15em] uppercase mb-2">INVOICE</h2>
+                            <div class="bg-gray-50 border border-gray-200 px-4 py-2 rounded text-right min-w-[200px]">
+                                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">No. Tagihan</p>
+                                <p class="font-bold text-brand-black text-sm mb-2" id="outInvNumber">...</p>
+                                
+                                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Tanggal Terbit</p>
+                                <p class="font-bold text-brand-black text-sm" id="outDate">...</p>
+                            </div>
+                            <div class="mt-3 inline-block px-4 py-1.5 text-xs font-bold rounded shadow-sm uppercase tracking-widest border" id="outInvStatusBadge">
                                 UNPAID
                             </div>
                         </div>
                     </div>
 
                     <!-- Customer Info -->
-                    <div class="grid grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Ditagihkan Kepada:</p>
-                            <p class="font-bold text-sm text-brand-black" id="outName">-</p>
-                            <p class="text-xs text-gray-600" id="outContact">-</p>
+                    <div class="grid grid-cols-2 gap-8 mb-10">
+                        <div class="space-y-1">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2 border-b border-gray-100 pb-1">Ditagihkan Kepada</p>
+                            <p class="font-black text-xl text-brand-black tracking-tight" id="outName">-</p>
+                            <p class="text-sm text-gray-600" id="outContact">-</p>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">Detail Sewa:</p>
-                            <table class="w-full text-xs">
-                                <tr><td class="text-gray-500 py-0.5">Check-in</td><td class="font-semibold text-right" id="outCheckIn">-</td></tr>
-                                <tr id="rowOutCheckOut"><td class="text-gray-500 py-0.5">Check-out</td><td class="font-semibold text-right" id="outCheckOut">-</td></tr>
-                                <tr><td class="text-gray-500 py-0.5">Durasi</td><td class="font-semibold text-right" id="outDuration">-</td></tr>
+                        <div class="space-y-1">
+                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2 border-b border-gray-100 pb-1">Detail Reservasi</p>
+                            <table class="w-full text-sm">
+                                <tr><td class="text-gray-500 py-1 w-1/3">Check-in</td><td class="font-semibold text-brand-black text-right" id="outCheckIn">-</td></tr>
+                                <tr id="rowOutCheckOut"><td class="text-gray-500 py-1">Check-out</td><td class="font-semibold text-brand-black text-right" id="outCheckOut">-</td></tr>
+                                <tr><td class="text-gray-500 py-1">Durasi</td><td class="font-semibold text-brand-black text-right" id="outDuration">-</td></tr>
                             </table>
                         </div>
                     </div>
 
                     <!-- Table Rincian Tagihan -->
-                    <table class="w-full text-left border-collapse text-sm mb-6">
+                    <table class="w-full text-left border-collapse text-sm mb-8">
                         <thead>
-                            <tr class="border-y-2 border-brand-black bg-gray-50">
-                                <th class="py-2 px-2 font-bold text-brand-black">Deskripsi Layanan</th>
-                                <th class="py-2 px-2 font-bold text-brand-black text-center">Qty / Durasi</th>
-                                <th class="py-2 px-2 font-bold text-brand-black text-right">Harga Satuan</th>
-                                <th class="py-2 px-2 font-bold text-brand-black text-right">Total</th>
+                            <tr class="border-y-2 border-brand-black">
+                                <th class="py-3 px-2 font-bold text-[11px] uppercase tracking-wider text-gray-500">Deskripsi Layanan</th>
+                                <th class="py-3 px-2 font-bold text-[11px] uppercase tracking-wider text-gray-500 text-center">Qty / Durasi</th>
+                                <th class="py-3 px-2 font-bold text-[11px] uppercase tracking-wider text-gray-500 text-right">Harga Satuan</th>
+                                <th class="py-3 px-2 font-bold text-[11px] uppercase tracking-wider text-gray-500 text-right">Total</th>
                             </tr>
                         </thead>
-                        <tbody id="invoice-items">
+                        <tbody id="invoice-items" class="divide-y divide-gray-100">
                             <!-- JS akan mengisi baris kamar dan extra service di sini -->
                         </tbody>
                     </table>
 
-                    <div class="flex flex-col sm:flex-row justify-between items-start mt-8 gap-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start mt-8 gap-8">
                         <div class="w-full sm:w-1/2">
-                            <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2">Instruksi Pembayaran:</p>
-                            <div class="border border-gray-200 p-3 rounded text-xs bg-gray-50">
-                                <p class="font-bold text-sm">Mandiri: 171-05-00004-000</p>
-                                <p class="text-gray-600 mb-2">A/N ARAN RUANGAN KERJA</p>
-                                <p class="italic text-gray-500">Menerima pembayaran melalui Transfer Mandiri, QRIS, dan Tunai.</p>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2 border-b border-gray-100 pb-1">Instruksi Pembayaran</p>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mt-2">
+                                <p class="text-xs text-gray-500 mb-1">Transfer Bank Mandiri:</p>
+                                <p class="font-bold text-lg text-brand-black tracking-[0.15em]">171-05-00004-000</p>
+                                <p class="text-sm font-semibold text-gray-700 mt-1 mb-3">A/N ARAN RUANGAN KERJA</p>
+                                <p class="text-[10px] text-gray-500 leading-relaxed italic">Menerima pembayaran melalui Transfer Mandiri, QRIS, dan Tunai (Cash) di resepsionis.</p>
                             </div>
                         </div>
+                        
                         <div class="w-full sm:w-1/2">
-                            <div class="flex justify-between py-2 text-sm border-b border-gray-200">
-                                <span class="text-gray-600">Total Tagihan (Grand Total)</span>
-                                <span class="font-bold" id="outGrandTotal">-</span>
-                            </div>
-                            <div class="flex justify-between py-2 text-sm border-b border-gray-200 text-green-700">
-                                <span>Nominal Telah Dibayar</span>
-                                <span class="font-bold" id="outPaid">-</span>
-                            </div>
-                            <div class="flex justify-between py-3 text-lg font-bold text-brand-black bg-gray-100 px-3 mt-2 rounded">
-                                <span>Sisa Tagihan</span>
-                                <span id="outBalance" class="text-red-600">-</span>
+                            <div class="space-y-3 pt-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500 font-medium">Subtotal Tagihan</span>
+                                    <span class="font-bold text-brand-black" id="outGrandTotal">-</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500 font-medium">Telah Dibayar (Real)</span>
+                                    <span class="font-bold text-brand-black" id="outPaid">-</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center py-4 px-4 bg-brand-black text-brand-yellow rounded-lg shadow-sm mt-4">
+                                    <span class="font-bold uppercase tracking-widest text-[10px] text-white">Sisa Tagihan</span>
+                                    <span id="outBalance" class="text-2xl font-black tracking-tight">-</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Kebijakan & Catatan Penting -->
-                    <div class="mt-6 border-t border-gray-300 pt-4 text-[9px] leading-tight flex flex-col md:flex-row gap-4">
-                        <div class="flex-1">
-                            <p class="font-bold uppercase mb-1.5 text-gray-800 text-[10px]">Kebijakan Pemesanan</p>
-                            <ul class="list-disc pl-3 text-gray-600 space-y-0.5">
+                    <div class="mt-6 border-t border-gray-200 pt-4 text-[9px] leading-tight flex flex-col md:flex-row gap-4">
+                        <div class="w-full md:w-1/3">
+                            <p class="font-bold uppercase tracking-widest mb-2 text-brand-black">Kebijakan Pemesanan</p>
+                            <ul class="list-disc pl-3 text-gray-600 space-y-1">
                                 <li>Pembayaran DP maupun pelunasan dapat dilakukan melalui transfer Mandiri / QRIS / cash saat check in.</li>
                                 <li>Pembatalan mendadak (≤ H-3 sebelum check in) dikenakan biaya 100% dari total pemesanan.</li>
                                 <li>Seluruh pembayaran yang telah dilakukan tidak dapat direfund.</li>
                             </ul>
                         </div>
-                        <div class="flex-1">
-                            <p class="font-bold uppercase mb-1.5 text-gray-800 text-[10px]">Catatan Penting!</p>
-                            <ul class="list-disc pl-3 text-gray-600 space-y-0.5">
-                                <li><span class="font-bold text-brand-black">OFO Kost berbasis syariah</span> (Dilarang membawa tamu lawan jenis yang belum sah)</li>
-                                <li>Harap menjaga kebersihan kamar & lingkungan OFO Kost.</li>
-                                <li>Ketentuan jam check in pukul 14.00 dan check out pukul 12.00.</li>
-                                <li>Dilarang merokok di area kamar (gunakan Area Merokok di Taman OFO).</li>
-                                <li>Dilarang membuat keributan yang mengganggu ketenangan penghuni lain.</li>
-                                <li>Dilarang merusak fasilitas atau barang milik kost.</li>
-                                <li>Dilarang menggunakan alat listrik berdaya tinggi tanpa izin.</li>
-                                <li>Dilarang membawa hewan peliharaan, tanpa seizin pengelola.</li>
-                            </ul>
-                            <p class="mt-1.5 font-bold text-red-600 italic">⚠️ Denda pelanggaran mulai dari Rp100.000 hingga biaya pengganti barang jika terjadi kerusakan fasilitas.</p>
-                            <p class="mt-1 font-bold text-brand-black">✅ Dengan pemesanan ini, saya menyatakan telah membaca, memahami, dan menyetujui seluruh peraturan di atas.</p>
+                        <div class="w-full md:w-2/3">
+                            <p class="font-bold uppercase tracking-widest mb-2 text-brand-black">Catatan Penting</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                                <ul class="list-disc pl-3 text-gray-600 space-y-1">
+                                    <li><span class="font-bold text-brand-black">OFO Kost berbasis syariah</span> (Dilarang membawa tamu lawan jenis yang belum sah).</li>
+                                    <li>Harap menjaga kebersihan kamar & lingkungan OFO Kost.</li>
+                                    <li>Ketentuan jam check in pukul 14.00 dan check out pukul 12.00.</li>
+                                    <li>Dilarang merokok di area kamar (gunakan Area Merokok di Taman OFO).</li>
+                                </ul>
+                                <ul class="list-disc pl-3 text-gray-600 space-y-1">
+                                    <li>Dilarang membuat keributan yang mengganggu ketenangan penghuni lain.</li>
+                                    <li>Dilarang merusak fasilitas atau barang milik kost.</li>
+                                    <li>Dilarang menggunakan alat listrik berdaya tinggi tanpa izin.</li>
+                                    <li>Dilarang membawa hewan peliharaan, tanpa seizin pengelola.</li>
+                                </ul>
+                            </div>
+                            <div class="mt-2.5 p-2 bg-gray-50 border border-gray-200 rounded text-[8.5px] text-gray-600 italic">
+                                <p class="font-semibold text-red-600 mb-0.5">⚠️ Denda pelanggaran mulai dari Rp100.000 hingga biaya pengganti barang jika terjadi kerusakan fasilitas.</p>
+                                <p class="font-semibold text-brand-black">✅ Dengan pemesanan ini, saya menyatakan telah membaca, memahami, dan menyetujui seluruh peraturan di atas.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div id="view-kwitansi" class="hidden">
-                    <div class="border-[6px] border-double border-gray-400 p-8 min-h-[14cm] flex flex-col relative overflow-hidden">
-                        <!-- Background Watermark (CSS Alternative) -->
-                        <div class="absolute inset-0 flex flex-col items-center justify-center opacity-[0.03] pointer-events-none select-none -rotate-12">
-                            <span class="text-[150px] font-black text-black tracking-tighter leading-none">OFO</span>
-                            <span class="text-[24px] font-bold text-black tracking-[0.4em] mt-2">KOST PREMIUM</span>
-                        </div>
+                    <div class="border-[6px] border-double border-gray-400 p-8 min-h-[14cm] flex flex-col relative overflow-hidden bg-white">
+                        <!-- Background Watermark -->
+                        <img src="OFO.png" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[70%] opacity-[0.05] pointer-events-none select-none -rotate-12" alt="Watermark">
 
-                        <div class="flex justify-between items-start border-b-2 border-brand-black pb-4 mb-8 z-10">
-                            <div class="flex items-center gap-2">
-                                <!-- LOGO TYPOGRAPHY ALTERNATIVE -->
-                                <div class="flex flex-col items-start leading-none">
-                                    <span class="text-4xl font-black text-brand-black tracking-tighter">OFO</span>
-                                    <span class="text-[10px] font-bold text-gray-800 tracking-[0.2em] mt-1">KOST PREMIUM</span>
-                                </div>
+                        <div class="flex justify-between items-start border-b-2 border-brand-black pb-4 mb-8 z-10 relative">
+                            <div class="w-32 h-12">
+                                <!-- LOGO IMAGE -->
+                                <img src="OFO.png" alt="OFO Kost Premium" class="w-full h-full object-contain object-left">
                             </div>
                             <div class="text-right">
                                 <h2 class="text-3xl font-black text-brand-black tracking-widest uppercase mb-1">KWITANSI</h2>
@@ -385,7 +396,7 @@
                             </div>
                         </div>
 
-                        <div class="space-y-6 text-sm flex-1 z-10">
+                        <div class="space-y-6 text-sm flex-1 z-10 relative">
                             <div class="flex pb-2">
                                 <div class="w-48 font-bold text-gray-700 uppercase tracking-wide">Telah Terima Dari</div>
                                 <div class="w-4">:</div>
