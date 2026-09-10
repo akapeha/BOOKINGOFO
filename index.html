@@ -1151,18 +1151,34 @@
                 margin:       0,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                // Tambahan windowWidth: 1024 memaksa sistem membaca layout versi komputer
+                html2canvas:  { scale: 2, useCORS: true, logging: false, windowWidth: 1024 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
+            // [FIX HP BLANK] Paksakan lebar kertas ke ukuran A4 (desktop) sesaat sebelum di-render
+            const originalWidth = element.style.width;
+            const originalMaxWidth = element.style.maxWidth;
+            element.style.width = '210mm';
+            element.style.maxWidth = '210mm';
+
             // Loading state on button is optional, generating immediately
             html2pdf().set(opt).from(element).save().then(() => {
+                // Kembalikan ke ukuran responsif HP setelah PDF selesai dibuat
+                element.style.width = originalWidth;
+                element.style.maxWidth = originalMaxWidth;
+
                 // Auto-increment Kwitansi jika didownload agar kwitansi selanjutnya punya nomor baru
                 if (currentTab === 'kwitansi') {
                     activeKwiBase++;
                     localStorage.setItem('ofo_kwi_base', activeKwiBase);
                     updatePreview();
                 }
+            }).catch(err => {
+                // Jika error, pastikan tampilan layar HP tetap kembali normal
+                element.style.width = originalWidth;
+                element.style.maxWidth = originalMaxWidth;
+                console.error("PDF Error: ", err);
             });
         }
 
