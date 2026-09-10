@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -71,6 +72,9 @@
             </div>
             <div class="flex items-center gap-2 md:gap-4 text-sm">
                 <span class="hidden md:inline text-gray-300"><i class="fa-solid fa-user-circle mr-1 text-brand-yellow"></i> Staff Area</span>
+                <button onclick="toggleDashboard()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
+                    <i class="fa-solid fa-chart-line mr-1"></i> Dashboard
+                </button>
                 <button onclick="checkAuthAndOpenSettings()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
                     <i class="fa-solid fa-gear mr-1"></i> Harga
                 </button>
@@ -81,7 +85,7 @@
         </div>
     </nav>
 
-    <main class="flex-1 flex flex-col lg:flex-row w-full max-w-[1600px] mx-auto">
+    <main id="booking-view" class="flex-1 flex flex-col lg:flex-row w-full max-w-[1600px] mx-auto">
         
         <!-- Left Panel: Form Input -->
         <div class="w-full lg:w-[450px] xl:w-[550px] bg-white border-r border-gray-200 flex flex-col shadow-sm z-0">
@@ -458,6 +462,51 @@
         </div>
     </main>
 
+    <!-- DASHBOARD VIEW (Hidden by default) -->
+    <main id="dashboard-view" class="hidden flex-1 w-full max-w-[1600px] mx-auto p-4 md:p-8 bg-gray-200 flex-col gap-6">
+        <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div>
+                <h2 class="text-2xl font-black text-brand-black"><i class="fa-solid fa-chart-pie text-brand-yellow mr-2"></i> Dashboard Performa</h2>
+                <p class="text-sm text-gray-500">Ringkasan transaksi dan pendapatan OFO Kost (Data Real-time dari Sheets)</p>
+            </div>
+            <button onclick="loadDashboardData()" class="px-4 py-2 bg-brand-black text-brand-yellow font-bold rounded shadow hover:bg-gray-800 transition text-sm flex items-center gap-2">
+                <i class="fa-solid fa-rotate-right" id="dashSyncIcon"></i> Sinkronisasi Data
+            </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-yellow flex flex-col">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Pendapatan (Bulan Ini)</span>
+                <span class="text-3xl font-black text-brand-black" id="dashIncomeThisMonth">Rp 0</span>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-black flex flex-col">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Transaksi (Bulan Ini)</span>
+                <span class="text-3xl font-black text-brand-black" id="dashBookingThisMonth">0 <span class="text-sm font-normal text-gray-500">Reservasi</span></span>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500 flex flex-col">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Layanan Terpopuler</span>
+                <span class="text-3xl font-black text-brand-black" id="dashTopService">-</span>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-[300px]">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                <h3 class="text-sm font-bold text-gray-600 mb-4 text-center uppercase tracking-wider">Trend Pendapatan per Bulan</h3>
+                <div class="relative flex-1 w-full h-full min-h-[250px]">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                <h3 class="text-sm font-bold text-gray-600 mb-4 text-center uppercase tracking-wider">Jumlah Transaksi per Bulan</h3>
+                <div class="relative flex-1 w-full h-full min-h-[250px]">
+                    <canvas id="bookingChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
     <!-- Login Modal (Hidden by default) -->
     <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex flex-col items-center justify-center backdrop-blur-sm px-4">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-sm relative">
@@ -587,6 +636,185 @@
         let currentTab = 'invoice';
         let extraCounter = 0;
         let pendingAuthAction = null; // Menyimpan aksi yang tertunda karena login
+
+        // Variabel untuk menyimpan object grafik agar tidak menumpuk saat di-refresh
+        let chartRev = null;
+        let chartBook = null;
+
+        // --- DASHBOARD UTILITIES ---
+        function toggleDashboard() {
+            const bookingView = document.getElementById('booking-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            
+            if (dashboardView.classList.contains('hidden')) {
+                // Tampilkan Dashboard
+                bookingView.classList.add('hidden');
+                bookingView.classList.remove('flex');
+                
+                dashboardView.classList.remove('hidden');
+                dashboardView.classList.add('flex');
+                
+                // Mulai load data saat dashboard dibuka
+                loadDashboardData();
+            } else {
+                // Kembali ke Booking
+                dashboardView.classList.add('hidden');
+                dashboardView.classList.remove('flex');
+                
+                bookingView.classList.remove('hidden');
+                bookingView.classList.add('flex');
+            }
+        }
+
+        async function loadDashboardData() {
+            const syncIcon = document.getElementById('dashSyncIcon');
+            syncIcon.classList.add('fa-spin'); // Muterin icon sync
+            
+            try {
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyfsfcNt5WYN0fso1YIvvIlPs2bNi4Kn4yP4xzr5ZO12kePv-GX-loAxjehtKe67m9j/exec';
+                const response = await fetch(scriptURL);
+                const result = await response.json();
+                
+                if (result.result === "success") {
+                    processDashboardData(result.data);
+                } else {
+                    showNotification("Gagal Sinkronisasi", "Gagal memuat data Dashboard. Pastikan Google Apps Script sudah di-deploy dengan fungsi doGet.", "error");
+                }
+            } catch (error) {
+                console.error("Dashboard error:", error);
+                showNotification("Gagal", "Terjadi kesalahan saat menghubungi server Google Sheets.", "error");
+            } finally {
+                syncIcon.classList.remove('fa-spin');
+            }
+        }
+
+        function processDashboardData(data) {
+            // Ambil waktu bulan ini (Format YYYY-MM)
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            let incomeThisMonth = 0;
+            let bookingThisMonth = 0;
+            
+            // Siapkan wadah agregasi/pengelompokan data
+            const monthlyStats = {}; 
+            const serviceCounts = {};
+
+            data.forEach(row => {
+                // Kita Abaikan baris yang datanya kosong atau Status Pembayarannya UNPAID
+                if (!row["INPUT DATE"] || row["STATUS"] === "UNPAID") return;
+                
+                const date = new Date(row["INPUT DATE"]);
+                if (isNaN(date.getTime())) return;
+
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const revenue = parseFloat(row["Total Price"]) || 0;
+                
+                // Tambahkan data ke kelompok bulannya
+                if (!monthlyStats[monthKey]) {
+                    monthlyStats[monthKey] = { 
+                        label: date.toLocaleString('id-ID', { month: 'short', year: 'numeric' }), 
+                        revenue: 0, 
+                        bookings: 0 
+                    };
+                }
+                monthlyStats[monthKey].revenue += revenue;
+                monthlyStats[monthKey].bookings += 1;
+                
+                // Khusus Bulan ini
+                if (monthKey === currentMonthKey) {
+                    incomeThisMonth += revenue;
+                    bookingThisMonth += 1;
+                }
+                
+                // Hitung Layanan (Pisahkan nama dari detail kamar)
+                let serviceRaw = row["ITEM SERVICE"];
+                if (serviceRaw && serviceRaw !== "-") {
+                    let mainCategory = serviceRaw.split('-')[0].trim(); // Mengambil kata "Hotel", "Kost", atau "Longstay"
+                    serviceCounts[mainCategory] = (serviceCounts[mainCategory] || 0) + 1;
+                }
+            });
+
+            // Update Angka di Kartu Atas
+            document.getElementById('dashIncomeThisMonth').textContent = `Rp ${formatRp(incomeThisMonth)}`;
+            document.getElementById('dashBookingThisMonth').innerHTML = `${bookingThisMonth} <span class="text-sm font-normal text-gray-500">Reservasi</span>`;
+            
+            // Tentukan layanan Terpopuler
+            let topService = "-";
+            let maxCount = 0;
+            for (const [srv, count] of Object.entries(serviceCounts)) {
+                if (count > maxCount) { maxCount = count; topService = srv; }
+            }
+            document.getElementById('dashTopService').textContent = topService;
+
+            // Sortir data agar urut dari bulan terlama ke terbaru
+            const sortedKeys = Object.keys(monthlyStats).sort();
+            const labels = sortedKeys.map(k => monthlyStats[k].label);
+            const revenues = sortedKeys.map(k => monthlyStats[k].revenue);
+            const bookings = sortedKeys.map(k => monthlyStats[k].bookings);
+
+            // Render ke Grafik Canvas
+            renderCharts(labels, revenues, bookings);
+        }
+
+        function renderCharts(labels, revenues, bookings) {
+            // Hancurkan grafik lama jika tombol sync ditekan berkali-kali agar tidak tumpang tindih
+            if (chartRev) chartRev.destroy();
+            if (chartBook) chartBook.destroy();
+
+            // 1. Grafik Garis (Pendapatan)
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            chartRev = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pendapatan (Rp)',
+                        data: revenues,
+                        borderColor: '#facc15', // Warna brand-yellow OFO
+                        backgroundColor: 'rgba(250, 204, 21, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.3, // Efek garis melengkung
+                        fill: true,
+                        pointBackgroundColor: '#111111',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return 'Rp ' + (value/1000000) + ' Jt'; } } // Disingkat ke Jutaan
+                        } 
+                    }
+                }
+            });
+
+            // 2. Grafik Batang (Jumlah Transaksi)
+            const ctxBook = document.getElementById('bookingChart').getContext('2d');
+            chartBook = new Chart(ctxBook, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Transaksi',
+                        data: bookings,
+                        backgroundColor: '#111111', // Warna brand-black OFO
+                        borderRadius: 6,
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
 
         // --- AUTH & NOTIF UTILITIES ---
         const AUTH_USER = 'OFOMIN';
