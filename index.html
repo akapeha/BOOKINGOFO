@@ -513,8 +513,19 @@
                 </div>
 
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h4 class="text-sm font-bold uppercase text-blue-800 tracking-wider mb-4 border-b border-blue-200 pb-2">Tarif Extra Service</h4>
-                    <div id="settingsExtraRates" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex justify-between items-center mb-4 border-b border-blue-200 pb-2">
+                        <h4 class="text-sm font-bold uppercase text-blue-800 tracking-wider">Tarif Extra Service</h4>
+                        <button type="button" onclick="addSettingExtraRow()" class="text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded shadow-sm transition">
+                            <i class="fa-solid fa-plus mr-1"></i> Tambah Layanan
+                        </button>
+                    </div>
+                    <div class="flex text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-2 px-1 gap-2">
+                        <div class="w-2/5">Nama Layanan</div>
+                        <div class="w-2/5">Tarif Default (Rp)</div>
+                        <div class="w-1/5">Satuan</div>
+                        <div class="w-8"></div>
+                    </div>
+                    <div id="settingsExtraRates" class="flex flex-col gap-2">
                         <!-- Diisi via JS -->
                     </div>
                 </div>
@@ -645,23 +656,29 @@
                 `;
             }
 
-            // Mengisi Input Harga Extra Service (Kecuali "Lainnya" karena itu input custom)
+            // Mengisi Input Harga & List Extra Service secara dinamis
             const extraContainer = document.getElementById('settingsExtraRates');
             extraContainer.innerHTML = '';
             for (let extra in extraServiceConfig) {
                 if(extra === 'Lainnya') continue;
-                extraContainer.innerHTML += `
-                    <div>
-                        <label class="block text-[11px] font-bold text-blue-800 mb-1 uppercase">${extra} <span class="text-gray-500 lowercase font-normal">(/${extraServiceConfig[extra].label})</span></label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2 text-sm text-gray-500 font-bold">Rp</span>
-                            <input type="number" id="set_extra_${extra.replace(/\s+/g, '_')}" value="${extraServiceConfig[extra].rate}" class="w-full pl-9 pr-3 py-2 text-sm rounded border border-blue-200 focus:border-brand-black outline-none font-bold text-brand-black">
-                        </div>
-                    </div>
-                `;
+                addSettingExtraRow(extra, extraServiceConfig[extra].rate, extraServiceConfig[extra].label);
             }
 
             document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        // Fungsi baru untuk menambah baris input layanan di dalam Pengaturan
+        function addSettingExtraRow(name = '', rate = '', label = '') {
+            const container = document.getElementById('settingsExtraRates');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 setting-extra-item';
+            div.innerHTML = `
+                <input type="text" class="ex-set-name w-2/5 px-2 py-2 text-xs rounded border border-blue-200 focus:border-brand-black outline-none font-bold text-brand-black" placeholder="Cth: Sewa Motor" value="${name}">
+                <input type="number" class="ex-set-rate w-2/5 px-2 py-2 text-xs rounded border border-blue-200 focus:border-brand-black outline-none font-bold text-brand-black" placeholder="Cth: 50000" value="${rate}">
+                <input type="text" class="ex-set-label w-1/5 px-2 py-2 text-xs rounded border border-blue-200 focus:border-brand-black outline-none font-bold text-brand-black" placeholder="Hari/Jam" value="${label}">
+                <button type="button" onclick="this.parentElement.remove()" class="w-8 text-red-400 hover:text-red-600 flex justify-center items-center p-1 transition tooltip"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
         }
 
         function closeSettingsModal() {
@@ -675,19 +692,32 @@
                 defaultRoomRates[room] = parseInt(val) || 0;
             }
             
-            // Simpan perubahan harga Extra Service
-            for (let extra in extraServiceConfig) {
-                if(extra === 'Lainnya') continue;
-                const val = document.getElementById(`set_extra_${extra.replace(/\s+/g, '_')}`).value;
-                extraServiceConfig[extra].rate = parseInt(val) || 0;
-            }
+            // Simpan perubahan dan penambahan Extra Service
+            let newExtraConfig = {};
+            document.querySelectorAll('.setting-extra-item').forEach(item => {
+                const name = item.querySelector('.ex-set-name').value.trim();
+                const rate = parseInt(item.querySelector('.ex-set-rate').value) || 0;
+                const label = item.querySelector('.ex-set-label').value.trim() || 'Item';
+                
+                // Hanya simpan jika namanya diisi (mencegah baris kosong tersimpan)
+                if (name !== '') {
+                    newExtraConfig[name] = { rate: rate, label: label };
+                }
+            });
+            
+            // Pastikan item "Lainnya" (Custom) selalu ada di posisi terakhir
+            newExtraConfig['Lainnya'] = { rate: 0, label: 'Custom' };
+            extraServiceConfig = newExtraConfig; // Update ke data master
 
             // Simpan ke memory lokal Browser
             localStorage.setItem('ofo_room_rates', JSON.stringify(defaultRoomRates));
             localStorage.setItem('ofo_extra_rates', JSON.stringify(extraServiceConfig));
             
             closeSettingsModal();
-            showNotification("Berhasil", "Pengaturan harga berhasil disimpan. Harga ini otomatis menjadi bawaan saat Anda memilih kamar/layanan baru di form.", "success");
+            showNotification("Berhasil", "Pengaturan harga dan daftar layanan berhasil disimpan. Opsi baru sudah muncul di form.", "success");
+            
+            // Render ulang form jika sedang ada input yang diubah
+            handleServiceChange(); 
         }
 
         // --- UTILITIES ---
