@@ -204,8 +204,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Status Pembayaran *</label>
-                                <select id="inpStatus" onchange="updatePreview()" class="w-full px-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black bg-white outline-none">
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Status Pembayaran (Otomatis)</label>
+                                <select id="inpStatus" disabled class="w-full px-3 py-2 text-sm rounded border border-gray-300 bg-gray-100 text-gray-500 font-bold outline-none cursor-not-allowed">
                                     <option value="PAID">LUNAS (Paid)</option>
                                     <option value="DP">DP (Sebagian)</option>
                                     <option value="UNPAID">Belum Bayar</option>
@@ -603,8 +603,7 @@
                 hideLoginModal();
                 
                 // Eksekusi aksi yang tertunda
-                if (pendingAuthAction === 'kwitansi') switchTab('kwitansi');
-                else if (pendingAuthAction === 'settings') openSettingsModal();
+                if (pendingAuthAction === 'settings') openSettingsModal();
                 
                 pendingAuthAction = null;
             } else {
@@ -788,8 +787,7 @@
             
             const qtyRoom = parseInt(document.getElementById('inpQtyRoom').value) || 1;
             const mainPrice = parseInt(document.getElementById('inpMainPrice').value) || 0;
-            const payment = parseInt(document.getElementById('inpPayment').value) || 0;
-            const status = document.getElementById('inpStatus').value;
+            let payment = parseInt(document.getElementById('inpPayment').value) || 0;
             const method = document.getElementById('inpMethod').value;
             const customInv = document.getElementById('inpCustomInv').value.trim();
             
@@ -836,6 +834,20 @@
             });
 
             const grandTotal = roomTotal + extraTotal;
+            
+            // LOGIKA STATUS PEMBAYARAN OTOMATIS
+            let status = 'UNPAID';
+            if (payment === 0) {
+                status = 'UNPAID';
+            } else if (payment >= grandTotal) {
+                status = 'PAID';
+            } else {
+                status = 'DP';
+            }
+            
+            // Update UI Select Status
+            document.getElementById('inpStatus').value = status;
+            
             const balance = grandTotal - payment;
 
             const dateStr = checkIn || new Date().toISOString().split('T')[0];
@@ -903,14 +915,6 @@
         }
 
         function switchTab(tab) {
-            // Cek otorisasi jika mencoba membuka Kwitansi
-            if (tab === 'kwitansi') {
-                if (sessionStorage.getItem('ofo_auth_verified') !== 'true') {
-                    showLoginModal('kwitansi');
-                    return; // Hentikan eksekusi perpindahan tab
-                }
-            }
-
             currentTab = tab;
             document.getElementById('view-invoice').classList.toggle('hidden', tab !== 'invoice');
             document.getElementById('view-invoice').classList.toggle('block', tab === 'invoice');
