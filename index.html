@@ -505,13 +505,26 @@
             </div>
             
             <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <!-- BAGIAN LAYANAN UTAMA (KAMAR) -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h4 class="text-sm font-bold uppercase text-gray-600 tracking-wider mb-4 border-b pb-2">Tarif Kamar Dasar</h4>
-                    <div id="settingsRoomRates" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h4 class="text-sm font-bold uppercase text-gray-600 tracking-wider">Layanan Utama (Kamar)</h4>
+                        <button type="button" onclick="addSettingRoomRow()" class="text-[10px] font-bold bg-gray-600 hover:bg-gray-700 text-white px-2 py-1.5 rounded shadow-sm transition">
+                            <i class="fa-solid fa-plus mr-1"></i> Tambah Kamar
+                        </button>
+                    </div>
+                    <div class="flex text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-2 px-1 gap-2">
+                        <div class="w-1/4">Kategori</div>
+                        <div class="w-2/4">Nama Kamar</div>
+                        <div class="w-1/4">Tarif Dasar (Rp)</div>
+                        <div class="w-8"></div>
+                    </div>
+                    <div id="settingsRoomRates" class="flex flex-col gap-2">
                         <!-- Diisi via JS -->
                     </div>
                 </div>
 
+                <!-- BAGIAN EXTRA SERVICE -->
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <div class="flex justify-between items-center mb-4 border-b border-blue-200 pb-2">
                         <h4 class="text-sm font-bold uppercase text-blue-800 tracking-wider">Tarif Extra Service</h4>
@@ -540,7 +553,8 @@
 
     <script>
         // Data Master
-        const roomData = {
+        // Mengubah const menjadi let agar bisa ditimpa saat Admin menyimpan pengaturan baru
+        let roomData = {
             Hotel: ['Twin Room', 'Superior room'],
             Longstay: ['Longstay Productive', 'Longstay Smart twin'],
             Kost: ['Kost Sharing', 'Kost Private']
@@ -624,7 +638,10 @@
 
         // --- SETTINGS UTILITIES ---
         function loadConfig() {
-            // Mengambil konfigurasi harga yang tersimpan di browser (jika ada)
+            // Mengambil konfigurasi struktur dan harga kamar dari browser (jika ada)
+            const savedRoomData = localStorage.getItem('ofo_room_data');
+            if (savedRoomData) roomData = JSON.parse(savedRoomData);
+
             const savedRooms = localStorage.getItem('ofo_room_rates');
             if (savedRooms) defaultRoomRates = JSON.parse(savedRooms);
             
@@ -641,19 +658,13 @@
         }
 
         function openSettingsModal() {
-            // Mengisi Input Harga Kamar
+            // Mengisi Input Struktur & Harga Kamar secara dinamis
             const roomContainer = document.getElementById('settingsRoomRates');
             roomContainer.innerHTML = '';
-            for (let room in defaultRoomRates) {
-                roomContainer.innerHTML += `
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-700 mb-1 uppercase">${room}</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2 text-sm text-gray-500 font-bold">Rp</span>
-                            <input type="number" id="set_room_${room.replace(/\s+/g, '_')}" value="${defaultRoomRates[room]}" class="w-full pl-9 pr-3 py-2 text-sm rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-brand-black">
-                        </div>
-                    </div>
-                `;
+            for (let category in roomData) {
+                roomData[category].forEach(roomName => {
+                    addSettingRoomRow(category, roomName, defaultRoomRates[roomName] || 0);
+                });
             }
 
             // Mengisi Input Harga & List Extra Service secara dinamis
@@ -667,7 +678,25 @@
             document.getElementById('settingsModal').classList.remove('hidden');
         }
 
-        // Fungsi baru untuk menambah baris input layanan di dalam Pengaturan
+        // Fungsi baru untuk menambah baris kamar utama di Pengaturan
+        function addSettingRoomRow(cat = 'Hotel', name = '', rate = '') {
+            const container = document.getElementById('settingsRoomRates');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 setting-room-item';
+            div.innerHTML = `
+                <select class="rm-set-cat w-1/4 px-2 py-2 text-xs rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-gray-700 bg-white">
+                    <option value="Hotel" ${cat === 'Hotel' ? 'selected' : ''}>Hotel</option>
+                    <option value="Longstay" ${cat === 'Longstay' ? 'selected' : ''}>Longstay</option>
+                    <option value="Kost" ${cat === 'Kost' ? 'selected' : ''}>Kost</option>
+                </select>
+                <input type="text" class="rm-set-name w-2/4 px-2 py-2 text-xs rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-brand-black" placeholder="Nama Kamar Baru" value="${name}">
+                <input type="number" class="rm-set-rate w-1/4 px-2 py-2 text-xs rounded border border-gray-300 focus:border-brand-black outline-none font-bold text-brand-black" placeholder="Tarif" value="${rate}">
+                <button type="button" onclick="this.parentElement.remove()" class="w-8 text-red-400 hover:text-red-600 flex justify-center items-center p-1 transition tooltip"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Fungsi untuk menambah baris input layanan tambahan di Pengaturan
         function addSettingExtraRow(name = '', rate = '', label = '') {
             const container = document.getElementById('settingsExtraRates');
             const div = document.createElement('div');
@@ -686,13 +715,23 @@
         }
 
         function saveSettings() {
-            // Simpan perubahan harga kamar
-            for (let room in defaultRoomRates) {
-                const val = document.getElementById(`set_room_${room.replace(/\s+/g, '_')}`).value;
-                defaultRoomRates[room] = parseInt(val) || 0;
-            }
+            // 1. Simpan perubahan dan penambahan Kamar Utama
+            let newRoomData = { Hotel: [], Longstay: [], Kost: [] };
+            let newRoomRates = {};
             
-            // Simpan perubahan dan penambahan Extra Service
+            document.querySelectorAll('.setting-room-item').forEach(item => {
+                const cat = item.querySelector('.rm-set-cat').value;
+                const name = item.querySelector('.rm-set-name').value.trim();
+                const rate = parseInt(item.querySelector('.rm-set-rate').value) || 0;
+                
+                // Hanya simpan jika namanya diisi
+                if (name !== '') {
+                    newRoomData[cat].push(name);
+                    newRoomRates[name] = rate;
+                }
+            });
+            
+            // 2. Simpan perubahan dan penambahan Extra Service
             let newExtraConfig = {};
             document.querySelectorAll('.setting-extra-item').forEach(item => {
                 const name = item.querySelector('.ex-set-name').value.trim();
@@ -707,14 +746,19 @@
             
             // Pastikan item "Lainnya" (Custom) selalu ada di posisi terakhir
             newExtraConfig['Lainnya'] = { rate: 0, label: 'Custom' };
-            extraServiceConfig = newExtraConfig; // Update ke data master
+            
+            // Update data master di dalam sistem
+            roomData = newRoomData;
+            defaultRoomRates = newRoomRates;
+            extraServiceConfig = newExtraConfig; 
 
-            // Simpan ke memory lokal Browser
+            // Simpan ke memory lokal Browser agar tidak hilang saat refresh
+            localStorage.setItem('ofo_room_data', JSON.stringify(roomData));
             localStorage.setItem('ofo_room_rates', JSON.stringify(defaultRoomRates));
             localStorage.setItem('ofo_extra_rates', JSON.stringify(extraServiceConfig));
             
             closeSettingsModal();
-            showNotification("Berhasil", "Pengaturan harga dan daftar layanan berhasil disimpan. Opsi baru sudah muncul di form.", "success");
+            showNotification("Berhasil", "Pengaturan harga, struktur kamar, dan layanan ekstra berhasil disimpan.", "success");
             
             // Render ulang form jika sedang ada input yang diubah
             handleServiceChange(); 
