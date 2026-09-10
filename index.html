@@ -72,7 +72,7 @@
             </div>
             <div class="flex items-center gap-2 md:gap-4 text-sm">
                 <span class="hidden md:inline text-gray-300"><i class="fa-solid fa-user-circle mr-1 text-brand-yellow"></i> Staff Area</span>
-                <button onclick="toggleDashboard()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
+                <button id="navDashboardBtn" onclick="toggleDashboard()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
                     <i class="fa-solid fa-chart-line mr-1"></i> Dashboard
                 </button>
                 <button onclick="checkAuthAndOpenSettings()" class="border border-gray-600 hover:border-brand-yellow hover:text-brand-yellow px-3 md:px-4 py-2 rounded transition text-xs md:text-sm">
@@ -464,14 +464,19 @@
 
     <!-- DASHBOARD VIEW (Hidden by default) -->
     <main id="dashboard-view" class="hidden flex-1 w-full max-w-[1600px] mx-auto p-4 md:p-8 bg-gray-200 flex-col gap-6">
-        <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 gap-4">
             <div>
                 <h2 class="text-2xl font-black text-brand-black"><i class="fa-solid fa-chart-pie text-brand-yellow mr-2"></i> Dashboard Performa</h2>
                 <p class="text-sm text-gray-500">Ringkasan transaksi dan pendapatan OFO Kost (Data Real-time dari Sheets)</p>
             </div>
-            <button onclick="loadDashboardData()" class="px-4 py-2 bg-brand-black text-brand-yellow font-bold rounded shadow hover:bg-gray-800 transition text-sm flex items-center gap-2">
-                <i class="fa-solid fa-rotate-right" id="dashSyncIcon"></i> Sinkronisasi Data
-            </button>
+            <div class="flex gap-2">
+                <button onclick="toggleDashboard()" class="px-4 py-2 border border-gray-300 text-gray-700 font-bold rounded shadow-sm hover:bg-gray-50 transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali ke Form
+                </button>
+                <button onclick="loadDashboardData()" class="px-4 py-2 bg-brand-black text-brand-yellow font-bold rounded shadow hover:bg-gray-800 transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right" id="dashSyncIcon"></i> Sinkronisasi Data
+                </button>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -645,6 +650,7 @@
         function toggleDashboard() {
             const bookingView = document.getElementById('booking-view');
             const dashboardView = document.getElementById('dashboard-view');
+            const navBtn = document.getElementById('navDashboardBtn');
             
             if (dashboardView.classList.contains('hidden')) {
                 // Tampilkan Dashboard
@@ -654,6 +660,8 @@
                 dashboardView.classList.remove('hidden');
                 dashboardView.classList.add('flex');
                 
+                navBtn.innerHTML = '<i class="fa-solid fa-arrow-left mr-1"></i> Form Booking';
+
                 // Mulai load data saat dashboard dibuka
                 loadDashboardData();
             } else {
@@ -663,6 +671,8 @@
                 
                 bookingView.classList.remove('hidden');
                 bookingView.classList.add('flex');
+                
+                navBtn.innerHTML = '<i class="fa-solid fa-chart-line mr-1"></i> Dashboard';
             }
         }
 
